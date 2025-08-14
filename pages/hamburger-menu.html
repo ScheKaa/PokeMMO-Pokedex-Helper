@@ -1,0 +1,26 @@
+<div class="hamburger-menu" id="hamburgerMenu">
+  <i class="fas fa-bars"></i>
+</div>
+
+<nav class="side-nav" id="sideNav">
+  <ul>
+    <li><a href="pokedex-helper.html">Pokédex Helper</a></li>
+    <li class="profile-controls-item">
+      <h3>Profiles</h3>
+      <select id="profileSelect">
+        <option value="">Select Profile</option>
+      </select>
+      <input type="text" id="newProfileName" placeholder="New profile name" />
+      <button id="createProfileBtn" class="control-button">Create</button>
+      <button id="deleteProfileBtn" class="control-button">Delete</button>
+    </li>
+    <li class="dark-mode-toggle-item">
+      <label class="switch-label-darkmode" for="darkModeToggle">Dark Mode</label>
+      <label class="switch-darkmode">
+        <input type="checkbox" id="darkModeToggle" />
+        <span class="slider-darkmode round-darkmode"></span>
+      </label>
+    </li>
+  </ul>
+</nav>
+<div class="menu-overlay" id="menuOverlay"></div>

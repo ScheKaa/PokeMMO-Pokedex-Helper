@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pokédex Helper</title>
+    <link rel="stylesheet" href="./style/common.css" />
+    <link rel="stylesheet" href="./style/pokedex-helper.css" />
+    <link rel="stylesheet" href="./style/hamburger-menu.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  </head>
+  <body>
+    <div class="main-content-wrapper">
+      <header>
+        <h1>Pokédex Helper</h1>
+        <div id="pokemonCount" class="pokemon-count"></div>
+        <div id="earliestCaughtInfo" class="caught-pokemon-count"></div>
+        <div id="caughtPokemonCount" class="caught-pokemon-count"></div>
+        <div class="controls">
+          <input type="text" id="search" placeholder="Search by name or ID" />
+          <select id="filterRegion">
+            <option value="">All Regions</option>
+            <option value="kanto">Kanto</option>
+            <option value="johto">Johto</option>
+            <option value="hoenn">Hoenn</option>
+            <option value="sinnoh">Sinnoh</option>
+            <option value="unova">Unova</option>
+          </select>
+          <select id="filterEncounterTrigger">
+            <option value="">All Triggers</option>
+          </select>
+          <select id="filterEncounterType">
+            <option value="">All Encounter Types</option>
+          </select>
+          <select id="filterCaught">
+            <option value="">Catch State</option>
+            <option value="true">Caught</option>
+            <option value="false">Not Caught</option>
+          </select>
+          <select id="filterCanBeCaught">
+            <option value="">All</option>
+            <option value="true">Can Be Caught</option>
+            <option value="false">Cannot Be Caught</option>
+          </select>
+          <input type="date" id="filterCaughtDate" />
+          <select id="sortCaughtDate">
+            <option value="">Sort by Date</option>
+            <option value="caughtAsc">Caught Date (Ascending)</option>
+            <option value="caughtDesc">Caught Date (Descending)</option>
+          </select>
+          <button id="exportPokedexBtn" class="control-button">Export</button>
+          <input type="file" id="importPokedexInput" accept=".json" style="display: none" />
+          <button id="importPokedexBtn" class="control-button">Import</button>
+        </div>
+      </header>
+
+      <main>
+        <button id="togglePokedex" class="collapsible">Toggle Pokédex View</button>
+        <div class="pokedex-grid-container">
+          <div class="pokedex-grid" id="pokedexGrid"></div>
+        </div>
+
+        <label for="catchingMethodSwitch" class="control-label">Preferred Catching Method</label>
+        <div class="switch-container">
+          <span class="switch-label">Fastest</span>
+          <label class="switch">
+            <input type="checkbox" id="catchingMethodSwitch" />
+            <span class="slider round"></span>
+          </label>
+          <span class="switch-label">Cheapest</span>
+        </div>
+
+        <!-- New section for region filter checkboxes -->
+        <div class="region-checkboxes-container" id="regionCheckboxes">
+          <label class="control-label">Filter by Region:</label>
+          <!-- Checkboxes will be dynamically populated here by JavaScript -->
+        </div>
+
+        <button id="findBestCatchingSpots" class="control-button">Find Best Catching Spots</button>
+        <div id="bestCatchingSpots" class="collapsible-content"></div>
+      </main>
+    </div>
+
+    <script type="module" src="./javascript/hamburger-menu.js"></script>
+    <script type="module" src="./javascript/pokedex-helper.js"></script>
+  </body>
+</html>
