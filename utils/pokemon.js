@@ -5,9 +5,9 @@ export let catchRates = [];
 export async function loadPokemonData() {
     try {
         const [pokemonResponse, dexResponse, catchRatesResponse] = await Promise.all([
-            fetch(new URL('../../data/pokemmo/monsters.json', import.meta.url).href),
-            fetch(new URL('../../data/pokemmo/dex.json', import.meta.url).href),
-            fetch(new URL('../data/catchRates.json', import.meta.url).href)
+            fetch('/data/pokemmo/monsters.json'),
+            fetch('/data/pokemmo/dex.json'),
+            fetch('/data/catchRates.json')
         ]);
 
         if (!pokemonResponse.ok || !dexResponse.ok || !catchRatesResponse.ok) {
