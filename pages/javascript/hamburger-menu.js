@@ -6,7 +6,7 @@ import { displayMessageBox } from '../../utils/ui-helper.js';
  * @param {Function} onProfileChangeCallback - A callback function to be executed when the active profile changes or on initial load.
  */
 export const initHamburgerMenu = (onProfileChangeCallback) => {
-  const fetchPath = '/pages/hamburger-menu.html';
+  const fetchPath = new URL('../../pages/hamburger-menu.html', import.meta.url).href;
 
   fetch(fetchPath)
     .then(response => {
