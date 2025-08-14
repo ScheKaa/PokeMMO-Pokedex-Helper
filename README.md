@@ -4,10 +4,17 @@ This project is a Pokedex Helper designed for PokeMMO, providing tools and utili
 
 ## Features
 
-- **Pokedex Management:** Keep track of your Pokemon collection.
+- **Pokedex Management:** Keep track of your Ingame Pokedex.
+- **Pokedex Filtering:** Various filter option, e.g. pheno 'Special Only' Pokemon.
 - **Catch Rate Calculator:** Calculate the probability of catching a Pokemon based on various factors.
-- **Best Catcher Recommendations:** Identify optimal location for catching Pokemon
-- **User Authentication:** Secure user profiles and data.
+- **Best Catching Spot Recommendations:** Identify optimal location for catching Pokemon
+- **Profile Managment:** Create different profiles for different Accounts
+- **Browser Stored:** Progress is browser stored, you can export/import your progress in case you need to switch your browser.
+
+## Usage
+
+Clicking on a Picture in Pokedex view or 'Best Catching Spots' marks a Pokemon as caught,
+by clicking on a caught Pokemon again, it gets 'released'
 
 ## Notes
 
