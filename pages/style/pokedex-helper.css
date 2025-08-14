@@ -356,22 +356,19 @@ details > summary.location-header:hover {
   }
 }
 
-@media (max-width: 480px) {
-  .location-pokemon-entry {
+@media (max-width: 768px) {
+  .controls {
     grid-template-columns: 1fr;
-    grid-template-areas:
-      "sprite"
-      "attributes-row"
-      "probabilities-row";
   }
-  .location-pokemon-entry .pokemon-sprite {
-    margin-bottom: 10px;
+  .controls #search {
+    order: 10;
   }
-  .details-attributes-container {
-    width: 100%;
-  }
-  .probabilities-container {
-    justify-content: center;
+}
+
+@media (max-width: 480px) {
+  .pokedex-grid {
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    gap: 10px;
   }
 }
 .control-label {
