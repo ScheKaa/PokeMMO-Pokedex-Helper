@@ -6,7 +6,7 @@ import {
 } from "../../utils/location.js";
 import { exportPokedexData, importPokedexData } from "../../utils/import-export.js";
 import { getBestCatchingProbabilities, getTop4CostEfficientBalls, getFastestCatchEstimates } from "../../utils/bestCatcher.js";
-import { getEvolutionLine } from '../../utils/breeding-helper.js';
+import { getEvolutionLine, getEvolutionMessages } from '../../utils/breeding-helper.js';
 import { initHamburgerMenu } from './hamburger-menu.js';
 import { getProfileData, saveProfileData, getActiveProfileName } from '../../utils/profile-manager.js';
 import { displayMessageBox } from '../../utils/ui-helper.js';
@@ -365,6 +365,27 @@ const appendCatchProbabilities = (entry, pokemonCatchData, useCheapestMethod) =>
     entry.appendChild(probContainer);
 };
 
+const hasBetterEncounterSpot = (pokemonId, currentRarity) => {
+    const pokemonObj = POKEMON.find(p => p.id === pokemonId);
+    if (!pokemonObj || !pokemonObj.locations) {
+        return false;
+    }
+
+    if (currentRarity === "Lure") {
+        return pokemonObj.locations.some(loc =>
+            loc.rarity && loc.rarity !== "Special" && loc.rarity !== "Lure"
+        );
+    }
+
+    if (currentRarity === "Very Rare") {
+        return pokemonObj.locations.some(loc =>
+            loc.rarity && loc.rarity !== "Special" && loc.rarity !== "Lure" && loc.rarity !== "Very Rare"
+        );
+    }
+
+    return false;
+};
+
 const createLocationPokemonEntry = (p, useCheapestMethod) => {
     const entry = document.createElement('div');
     entry.className = 'location-pokemon-entry';
@@ -395,34 +416,36 @@ const createLocationPokemonEntry = (p, useCheapestMethod) => {
     pokemonDetailsDiv.appendChild(pokemonIdSmall);
     pokemonDetailsDiv.appendChild(name);
 
-    const evolutionLineNames = getEvolutionLine(p.id);
-    let uncatchableEvolutionFound = false;
-    let uncatchablePokemonName = '';
-
-    for (const evoName of evolutionLineNames) {
-        const evoPokemon = POKEMON.find(pk => pk.name === evoName);
-        if (evoPokemon && (!evoPokemon.locations || evoPokemon.locations.length === 0)) {
-            uncatchableEvolutionFound = true;
-            uncatchablePokemonName = evoPokemon.name;
-            break;
-        }
-    }
-
-    if (uncatchableEvolutionFound) {
-        const uncatchableMessage = document.createElement('p');
-        uncatchableMessage.className = 'uncatchable-evolution-message';
-        uncatchableMessage.textContent = `Consider keeping, ${uncatchablePokemonName} cannot be caught in the wild.`;
-        pokemonDetailsDiv.appendChild(uncatchableMessage);
-    }
+    const evolutionMessages = getEvolutionMessages(p.id);
+    evolutionMessages.forEach(msg => {
+        const messageElement = document.createElement('p');
+        messageElement.className = 'uncatchable-evolution-message';
+        messageElement.textContent = msg;
+        pokemonDetailsDiv.appendChild(messageElement);
+    });
 
     detailsAndAttributesContainer.appendChild(pokemonDetailsDiv);
 
-    const rarities = [...new Set(p.encounters.map(e => e.rarity))].join(', ');
+    const rarities = [...new Set(p.encounters.map(e => e.rarity))];
     const types = [...new Set(p.encounters.map(e => e.type))].join(', ');
     const levels = [...new Set(p.encounters.map(e => `${e.min_level}-${e.max_level}`))].join(', ');
 
+    const betterSpotMessages = [];
+    rarities.forEach(rarity => {
+        if ((rarity === "Lure" || rarity === "Very Rare") && hasBetterEncounterSpot(p.id, rarity)) {
+            betterSpotMessages.push(`Note: A better encounter spot exists for ${p.name}.`);
+        }
+    });
+
+    [...new Set(betterSpotMessages)].forEach(msg => {
+        const messageElement = document.createElement('p');
+        messageElement.className = 'uncatchable-evolution-message';
+        messageElement.textContent = msg;
+        pokemonDetailsDiv.appendChild(messageElement);
+    });
+
     const attributes = [
-        `Rarity: ${rarities}`,
+        `Rarity: ${rarities.join(', ')}`,
         `Type: ${types}`,
         `Level: ${levels}`
     ];
