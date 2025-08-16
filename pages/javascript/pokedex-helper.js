@@ -769,6 +769,14 @@ const setupEventListeners = () => {
         const eventType = (element.id === 'search' || element.id === 'filterCaughtDate') ? 'input' : 'change';
         element.addEventListener(eventType, displayPokemon);
     });
+
+    catchingMethodSwitch.addEventListener('change', () => {
+        localStorage.setItem('catchingMethod', catchingMethodSwitch.checked);
+    });
+
+    displayProbabilitiesSwitch.addEventListener('change', () => {
+        localStorage.setItem('displayProbabilities', displayProbabilitiesSwitch.checked);
+    });
     
     pokedexGrid.dataset.listenersInitialized = 'true';
 };
