@@ -1,48 +1,56 @@
 export function displayMessageBox(message, type) {
-const messageBox = document.createElement('div');
-messageBox.className = `message-box ${type}`;
-messageBox.textContent = message;
-document.body.appendChild(messageBox);
+    const messageBox = document.createElement('div');
+    messageBox.className = `message-box ${type}`;
+    const contentWrapper = document.createElement('div');
+    contentWrapper.className = 'message-box-content';
+    contentWrapper.textContent = message;
 
-setTimeout(() => {
-    messageBox.style.opacity = '1';
-}, 10);
+    messageBox.appendChild(contentWrapper);
+    document.body.appendChild(messageBox);
 
-setTimeout(() => {
-    messageBox.style.opacity = '0';
-    messageBox.addEventListener('transitionend', () => {
-        messageBox.remove();
-    }, { once: true });
-}, 3000);
+    setTimeout(() => {
+        messageBox.style.opacity = '1';
+    }, 10);
+
+    setTimeout(() => {
+        messageBox.style.opacity = '0';
+        messageBox.addEventListener('transitionend', () => {
+            messageBox.remove();
+        }, { once: true });
+    }, 3000);
 }
 
 export function createMessageBox(type, message, isConfirmation = false, onConfirm = null) {
-    let messageBoxContainer = document.getElementById('storyMessageBoxContainer');
-    if (!messageBoxContainer) {
-        messageBoxContainer = document.createElement('div');
-        messageBoxContainer.id = 'storyMessageBoxContainer';
-        messageBoxContainer.className = 'fixed top-5 right-5 z-[100]';
-        document.body.appendChild(messageBoxContainer);
-    }
-
     const messageBox = document.createElement('div');
-    let messageBoxClasses = 'relative p-4 mb-3 rounded-lg shadow-lg text-white max-w-sm w-full flex items-center justify-between animate-slideIn ';
+    let messageBoxClasses = 'message-box ';
 
     if (type === 'success') {
-        messageBoxClasses += 'bg-green-500';
+        messageBoxClasses += 'success';
     } else if (type === 'error') {
-        messageBoxClasses += 'bg-red-500';
+        messageBoxClasses += 'error';
     } else {
-        messageBoxClasses += 'bg-blue-500';
+        messageBoxClasses += 'info';
     }
     messageBox.className = messageBoxClasses;
 
-    messageBox.innerHTML = `
+    const contentWrapper = document.createElement('div');
+    contentWrapper.className = 'message-box-content';
+
+    if (type === 'success') {
+        messageBox.classList.add('success');
+    } else if (type === 'error') {
+        messageBox.classList.add('error');
+    } else {
+        messageBox.classList.add('info');
+    }
+
+    contentWrapper.innerHTML = `
         <span>${message}</span>
         <button class="ml-4 text-white opacity-75 hover:opacity-100 close-message-box">
             <i class="fas fa-times"></i>
         </button>
     `;
+    messageBox.appendChild(contentWrapper);
 
     if (isConfirmation) {
         const buttonContainer = document.createElement('div');
@@ -63,15 +71,22 @@ export function createMessageBox(type, message, isConfirmation = false, onConfir
 
         buttonContainer.appendChild(yesButton);
         buttonContainer.appendChild(noButton);
-        messageBox.appendChild(buttonContainer);
+        contentWrapper.appendChild(buttonContainer);
     }
 
-    messageBoxContainer.appendChild(messageBox);
+    document.body.appendChild(messageBox); 
+
+    setTimeout(() => {
+        messageBox.style.opacity = '1';
+    }, 10);
 
     if (!isConfirmation) {
-        setTimeout(() => {
-            messageBox.remove();
-        }, 5000);
+        messageBox.addEventListener('click', () => {
+            messageBox.style.opacity = '0';
+            messageBox.addEventListener('transitionend', () => {
+                messageBox.remove();
+            }, { once: true });
+        }, { once: true });
     }
 
     messageBox.querySelector('.close-message-box').onclick = () => {

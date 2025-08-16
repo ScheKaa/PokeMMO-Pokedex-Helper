@@ -9,7 +9,7 @@ import { getBestCatchingProbabilities, getTop4CostEfficientBalls, getFastestCatc
 import { getEvolutionLine, getEvolutionMessages, filterLocationsByTimeAndSeason, getCurrentIngameTime } from '../../utils/dex-helper-utils.js';
 import { initHamburgerMenu } from './hamburger-menu.js';
 import { getProfileData, saveProfileData, getActiveProfileName } from '../../utils/profile-manager.js';
-import { displayMessageBox } from '../../utils/ui-helper.js';
+import { displayMessageBox, createMessageBox } from '../../utils/ui-helper.js';
 
 const pokedexGrid = document.getElementById("pokedexGrid");
 const pokemonCountElement = document.getElementById("pokemonCount");
@@ -759,6 +759,17 @@ const setupEventListeners = () => {
     pokedexGrid.dataset.listenersInitialized = 'true';
 };
 
+let lastKnownIngamePeriod = localStorage.getItem('lastKnownIngamePeriod');
+
+const checkIngameTimeChange = () => {
+    const { period: currentIngamePeriod } = getCurrentIngameTime();
+    if (lastKnownIngamePeriod && lastKnownIngamePeriod !== currentIngamePeriod) {
+        createMessageBox('info', 'The in-game daytime has changed. Consider refreshing the list!');
+    }
+    localStorage.setItem('lastKnownIngamePeriod', currentIngamePeriod);
+    lastKnownIngamePeriod = currentIngamePeriod;
+};
+
 async function initializeApp() {
     try {
         await loadPokemonData();
@@ -776,6 +787,8 @@ async function initializeApp() {
         populateFilters();
         setupEventListeners();
         displayPokemon();
+        checkIngameTimeChange();
+        setInterval(checkIngameTimeChange, 60 * 1000);
     } catch (error) {
         document.body.innerHTML = `<div style="text-align: center; padding: 50px; font-size: 1.2em; color: red;">
             <h1>Application Error</h1>
