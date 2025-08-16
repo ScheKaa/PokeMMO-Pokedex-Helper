@@ -167,7 +167,8 @@ details > summary.location-header:hover {
   background-color: var(--hamburger-menu-hover-bg);
 }
 
-.location-search-input {
+.location-search-input, 
+.catching-spot-search-input {
     margin: 10px 0 15px 0;
     padding: 8px 10px;
     border: 1px solid var(--border-color);
@@ -178,7 +179,8 @@ details > summary.location-header:hover {
     color: var(--text-color);
 }
 
-.location-search-input::placeholder {
+.location-search-input::placeholder,
+.catching-spot-search-input::placeholder  {
     color: var(--secondary-text-color);
 }
 

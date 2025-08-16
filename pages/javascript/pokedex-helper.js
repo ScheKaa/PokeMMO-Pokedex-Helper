@@ -31,6 +31,7 @@ const importPokedexBtn = document.getElementById("importPokedexBtn");
 const togglePokedexBtn = document.getElementById("togglePokedex");
 const findBestCatchingSpotsBtn = document.getElementById("findBestCatchingSpots");
 const regionCheckboxesContainer = document.getElementById("regionCheckboxes");
+const catchingSpotSearchInput = document.getElementById("catchingSpotSearch");
 
 let pokedexStatus = {};
 
@@ -717,6 +718,19 @@ const setupEventListeners = () => {
             return;
         }
         handleBestSpotsSpriteClick(e);
+    });
+
+    catchingSpotSearchInput.addEventListener('input', () => {
+        const searchTerm = catchingSpotSearchInput.value.toLowerCase();
+        const locationDetails = bestCatchingSpotsContainer.querySelectorAll('details');
+        locationDetails.forEach(detail => {
+            const locationHeader = detail.querySelector('.location-header').textContent.toLowerCase();
+            if (locationHeader.includes(searchTerm)) {
+                detail.style.display = '';
+            } else {
+                detail.style.display = 'none';
+            }
+        });
     });
 
     togglePokedexBtn.addEventListener("click", () => {
