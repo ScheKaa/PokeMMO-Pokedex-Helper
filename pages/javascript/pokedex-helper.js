@@ -748,14 +748,7 @@ const setupEventListeners = () => {
         const eventType = (element.id === 'search' || element.id === 'filterCaughtDate') ? 'input' : 'change';
         element.addEventListener(eventType, displayPokemon);
     });
-
-    regionCheckboxesContainer.addEventListener('change', (e) => {
-        if (e.target.type === 'checkbox' && e.target.name === 'filterRegionCheckbox') {
-            findBestCatchingSpots();
-        }
-    });
     
-
     pokedexGrid.dataset.listenersInitialized = 'true';
 };
 
