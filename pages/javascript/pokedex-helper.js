@@ -17,6 +17,7 @@ const earliestCaughtInfoElement = document.getElementById("earliestCaughtInfo");
 const caughtPokemonCountElement = document.getElementById("caughtPokemonCount");
 const bestCatchingSpotsContainer = document.getElementById("bestCatchingSpots");
 const catchingMethodSwitch = document.getElementById("catchingMethodSwitch");
+const displayProbabilitiesSwitch = document.getElementById("displayProbabilitiesSwitch");
 const filterRegionElement = document.getElementById("filterRegion");
 const filterEncounterTriggerElement = document.getElementById("filterEncounterTrigger");
 const filterEncounterTypeElement = document.getElementById("filterEncounterType");
@@ -314,7 +315,11 @@ const applyHighlighting = (element, type, value) => {
     }
 };
 
-const appendCatchProbabilities = (entry, pokemonCatchData, useCheapestMethod, encounterTypes) => {
+const appendCatchProbabilities = (entry, pokemonCatchData, useCheapestMethod, encounterTypes, displayProbabilities) => {
+    if (!displayProbabilities) {
+        return;
+    }
+
     const probContainer = document.createElement('div');
     probContainer.className = 'probabilities-container';
 
@@ -468,7 +473,8 @@ const createLocationPokemonEntry = (p, useCheapestMethod) => {
 
     const pokemonCatchData = (useCheapestMethod ? getTop4CostEfficientBalls : getFastestCatchEstimates)(getBestCatchingProbabilities(p.encounters.map(enc => ({ ...p, encounter: enc }))))[0];
     if (pokemonCatchData) {
-        appendCatchProbabilities(entry, pokemonCatchData, useCheapestMethod, types);
+    const displayProbabilities = !displayProbabilitiesSwitch.checked;
+        appendCatchProbabilities(entry, pokemonCatchData, useCheapestMethod, types, displayProbabilities);
     }
 
     return entry;
@@ -555,6 +561,7 @@ const findBestCatchingSpots = () => {
     relevantLocations.sort((a, b) => b.uniqueUncaughtCount - a.uniqueUncaughtCount);
     bestCatchingSpotsContainer.innerHTML = "";
     const useCheapestMethod = catchingMethodSwitch.checked;
+    const displayProbabilities = !displayProbabilitiesSwitch.checked;
 
     relevantLocations.forEach(({ locationKey, pokemonList, uniqueUncaughtCount }, index) => {
         const details = document.createElement("details");
@@ -581,7 +588,7 @@ const findBestCatchingSpots = () => {
         
         const sortedLocationPokemon = sortLocationPokemon(pokemonList, currentRegionFilter);
         sortedLocationPokemon.forEach(p => {
-            listContainer.appendChild(createLocationPokemonEntry(p, useCheapestMethod));
+            listContainer.appendChild(createLocationPokemonEntry(p, useCheapestMethod, displayProbabilities));
         });
         bestCatchingSpotsContainer.appendChild(details);
     });
@@ -718,7 +725,6 @@ const setupEventListeners = () => {
     });
 
     findBestCatchingSpotsBtn.addEventListener('click', findBestCatchingSpots);
-    catchingMethodSwitch.addEventListener('change', findBestCatchingSpots);
 
     exportPokedexBtn.addEventListener("click", () => exportPokedexData(pokedexStatus));
 
@@ -778,6 +784,21 @@ async function initializeApp() {
             saveProfileData('pokedexStatus', currentPokedexStatus);
         }
         pokedexStatus = currentPokedexStatus;
+
+        // Load switch states from local storage
+        const savedCatchingMethod = localStorage.getItem('catchingMethod');
+        if (savedCatchingMethod !== null) {
+            catchingMethodSwitch.checked = JSON.parse(savedCatchingMethod);
+        } else {
+            catchingMethodSwitch.checked = false; // Default to Fastest
+        }
+
+        const savedDisplayProbabilities = localStorage.getItem('displayProbabilities');
+        if (savedDisplayProbabilities !== null) {
+            displayProbabilitiesSwitch.checked = JSON.parse(savedDisplayProbabilities);
+        } else {
+            displayProbabilitiesSwitch.checked = false; // Default to Yes
+        }
 
         populateFilters();
         setupEventListeners();

@@ -410,6 +410,14 @@ details > summary.location-header:hover {
   text-align: center;
   color: var(--text-color);
 }
+
+.control-group {
+  border: 1px solid var(--border-color);
+  padding: 15px;
+  border-radius: 8px;
+  background-color: var(--secondary-bg);
+  box-shadow: 0 2px 8px var(--shadow-color);
+}
 .switch-container {
   display: flex;
   align-items: center;
@@ -509,4 +517,12 @@ input:checked + .slider:before {
 .region-checkbox-item label {
   font-weight: 500;
   color: var(--text-color);
+}
+
+.switch-controls-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px; /* Adjust gap as needed */
+  margin: 20px 0;
 }
