@@ -6,7 +6,7 @@ import {
 } from "../../utils/location.js";
 import { exportPokedexData, importPokedexData } from "../../utils/import-export.js";
 import { getBestCatchingProbabilities, getTop4CostEfficientBalls, getFastestCatchEstimates } from "../../utils/bestCatcher.js";
-import { getEvolutionLine, getEvolutionMessages } from '../../utils/breeding-helper.js';
+import { getEvolutionLine, getEvolutionMessages, filterLocationsByTimeAndSeason } from '../../utils/dex-helper-utils.js';
 import { initHamburgerMenu } from './hamburger-menu.js';
 import { getProfileData, saveProfileData, getActiveProfileName } from '../../utils/profile-manager.js';
 import { displayMessageBox } from '../../utils/ui-helper.js';
@@ -469,11 +469,20 @@ const createLocationPokemonEntry = (p, useCheapestMethod) => {
 
 const groupPokemonByLocation = () => {
     const locations = new Map();
+    const selectedRegions = ['Kanto', 'Johto', 'Hoenn', 'Sinnoh', 'Unova'];
+
     POKEMON.forEach(pokemon => {
         if (pokemon.locations) {
-            pokemon.locations.forEach(loc => {
+            // Use the filterLocationsByTimeAndSeason function
+            const filteredLocations = filterLocationsByTimeAndSeason(pokemon.locations, selectedRegions);
+            
+            filteredLocations.forEach(loc => {
                 if (loc.rarity === "Special") return;
-                const locationKey = `${loc.region_name} - ${loc.location}`;
+
+                // Clean the location name for grouping, removing time/season specifics
+                const cleanLocationName = loc.location.replace(/\s*\((season[0-3]|day|night|morning)[^)]*\)/gi, '').trim();
+                const locationKey = `${loc.region_name} - ${cleanLocationName}`;
+
                 if (!locations.has(locationKey)) {
                     locations.set(locationKey, new Map());
                 }
