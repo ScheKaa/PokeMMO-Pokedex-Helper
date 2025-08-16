@@ -566,7 +566,7 @@ const findBestCatchingSpots = () => {
 
     relevantLocations.forEach(({ locationKey, pokemonList, uniqueUncaughtCount }, index) => {
         const details = document.createElement("details");
-        if (openDetails.includes(locationKey) || (index === 0 && openDetails.length === 0)) {
+        if (openDetails.includes(locationKey)) {
             details.open = true;
         }
 
