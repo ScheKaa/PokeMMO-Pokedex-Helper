@@ -117,7 +117,7 @@ export const getTop4CostEfficientBalls = (calculatedProbabilities) => {
             pokemonId: pokemonResult.pokemonId,
             pokemonName: pokemonResult.pokemonName,
             encounterLocation: pokemonResult.encounterLocation,
-            top4CostEfficientBalls: scores.sort((a, b) => a.expectedCost - b.expectedCost).slice(0, 8)
+            top4CostEfficientBalls: scores.sort((a, b) => a.expectedCost - b.expectedCost).slice(0, 4)
         };
     });
 };
