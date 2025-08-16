@@ -338,9 +338,6 @@ const appendCatchProbabilities = (entry, pokemonCatchData, useCheapestMethod, en
         const conditionElement = document.createElement('p');
         conditionElement.className = 'probability-info';
         conditionElement.textContent = `Cond: ${item.condition}`;
-        if (item.ballName === 'Dusk Ball') {
-            conditionElement.textContent += ' + Dark';
-        }
         singleEstimateBlock.appendChild(conditionElement);
 
         if (!useCheapestMethod) {
@@ -425,8 +422,8 @@ const createLocationPokemonEntry = (p, useCheapestMethod) => {
     const evolutionMessages = getEvolutionMessages(p.id);
     evolutionMessages.forEach(msg => {
         const messageElement = document.createElement('p');
-        messageElement.className = 'uncatchable-evolution-message';
-        messageElement.textContent = msg;
+        messageElement.className = `uncatchable-evolution-message ${msg.type}-message`;
+        messageElement.textContent = msg.text;
         pokemonDetailsDiv.appendChild(messageElement);
     });
 
@@ -437,15 +434,19 @@ const createLocationPokemonEntry = (p, useCheapestMethod) => {
     const levels = [...new Set(p.encounters.map(e => `${e.min_level}-${e.max_level}`))].join(', ');
 
     const betterSpotMessages = [];
-    rarities.forEach(rarity => {
-        if ((rarity === "Lure" || rarity === "Very Rare") && hasBetterEncounterSpot(p.id, rarity)) {
-            betterSpotMessages.push(`Note: A better encounter spot exists for ${p.name}.`);
-        }
-    });
+    const isOnlyLureOrVeryRare = rarities.every(r => r === "Lure" || r === "Very Rare") && (rarities.includes("Lure") || rarities.includes("Very Rare"));
+
+    if (isOnlyLureOrVeryRare) {
+        rarities.forEach(rarity => {
+            if ((rarity === "Lure" || rarity === "Very Rare") && hasBetterEncounterSpot(p.id, rarity)) {
+                betterSpotMessages.push(`Note: A better encounter spot exists for ${p.name}.`);
+            }
+        });
+    }
 
     [...new Set(betterSpotMessages)].forEach(msg => {
         const messageElement = document.createElement('p');
-        messageElement.className = 'uncatchable-evolution-message';
+        messageElement.className = 'uncatchable-evolution-message better-spot-message';
         messageElement.textContent = msg;
         pokemonDetailsDiv.appendChild(messageElement);
     });

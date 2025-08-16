@@ -171,6 +171,7 @@ button:hover {
   --button-bg-hover: #c0392b;
   --switch-bg-on: #2196F3;
   --switch-bg-off: #ccc;
+  --uncatchable-message-color: red;
 }
 
 body.dark-mode {
@@ -242,4 +243,5 @@ body.dark-mode {
   --button-bg-hover: #3b5bdb;
   --switch-bg-on: #63b3ed;
   --switch-bg-off: #718096;
+  --uncatchable-message-color: #fc8181;
 }

@@ -174,7 +174,7 @@ export const getFastestCatchEstimates = (calculatedProbabilities) => {
                 a.sortTurns - b.sortTurns ||
                 b.sortProbability - a.sortProbability ||
                 a.expectedCost - b.expectedCost
-            ).slice(0, 8)
+            ).slice(0, 4)
         };
     });
 };

@@ -280,6 +280,14 @@ details > summary.location-header:hover {
 .uncatchable-evolution-message {
   margin: 0;
 }
+
+.uncatchable-message {
+  color: var(--uncatchable-message-color);
+}
+
+.better-spot-message {
+  color: orange;
+}
 .ball-type {
   font-weight: 600;
   color: var(--text-color);
@@ -360,6 +368,42 @@ details > summary.location-header:hover {
   .pokedex-grid {
     grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
     gap: 10px;
+  }
+
+  .details-attributes-container {
+    grid-template-columns: 1fr;
+    gap: 5px;
+    padding: 5px;
+  }
+
+  .pokemon-attribute-block {
+    min-height: 30px;
+    padding: 5px; 
+    font-size: 0.8em; 
+  }
+
+  .pokemon-attribute-block .attribute-label,
+  .pokemon-attribute-block .attribute-value {
+    font-size: 0.5em;
+  }
+
+  .probabilities-container {
+    gap: 5px; /* Reduce gap */
+    padding: 5px; /* Reduce padding */
+  }
+
+  .single-ball-probability-block {
+    flex-basis: calc(50% - 2.5px); /* Adjust for smaller gap */
+    padding: 5px; /* Reduce padding */
+    min-height: 50px; /* Make probability blocks smaller */
+  }
+
+  .ball-type {
+    font-size: 0.8em; /* Smaller text for ball type */
+  }
+
+  .probability-info {
+    font-size: 0.7em; /* Smaller text for probability info */
   }
 }
 .control-label {
