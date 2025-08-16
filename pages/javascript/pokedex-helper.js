@@ -6,7 +6,7 @@ import {
 } from "../../utils/location.js";
 import { exportPokedexData, importPokedexData } from "../../utils/import-export.js";
 import { getBestCatchingProbabilities, getTop4CostEfficientBalls, getFastestCatchEstimates } from "../../utils/bestCatcher.js";
-import { getEvolutionLine, getEvolutionMessages, filterLocationsByTimeAndSeason } from '../../utils/dex-helper-utils.js';
+import { getEvolutionLine, getEvolutionMessages, filterLocationsByTimeAndSeason, getCurrentIngameTime } from '../../utils/dex-helper-utils.js';
 import { initHamburgerMenu } from './hamburger-menu.js';
 import { getProfileData, saveProfileData, getActiveProfileName } from '../../utils/profile-manager.js';
 import { displayMessageBox } from '../../utils/ui-helper.js';
@@ -314,13 +314,19 @@ const applyHighlighting = (element, type, value) => {
     }
 };
 
-const appendCatchProbabilities = (entry, pokemonCatchData, useCheapestMethod) => {
+const appendCatchProbabilities = (entry, pokemonCatchData, useCheapestMethod, encounterTypes) => {
     const probContainer = document.createElement('div');
     probContainer.className = 'probabilities-container';
 
     const dataToDisplay = useCheapestMethod ? pokemonCatchData.top4CostEfficientBalls : pokemonCatchData.fastestCatchEstimates;
 
+    const { period: currentTimeOfDay } = getCurrentIngameTime();
+
     dataToDisplay.forEach(item => {
+        if (item.ballName === 'Dusk Ball' && !(currentTimeOfDay === 'Night' || encounterTypes.includes('Cave'))) {
+            return;
+        }
+
         const singleEstimateBlock = document.createElement('div');
         singleEstimateBlock.className = 'single-ball-probability-block';
 
@@ -461,7 +467,7 @@ const createLocationPokemonEntry = (p, useCheapestMethod) => {
 
     const pokemonCatchData = (useCheapestMethod ? getTop4CostEfficientBalls : getFastestCatchEstimates)(getBestCatchingProbabilities(p.encounters.map(enc => ({ ...p, encounter: enc }))))[0];
     if (pokemonCatchData) {
-        appendCatchProbabilities(entry, pokemonCatchData, useCheapestMethod);
+        appendCatchProbabilities(entry, pokemonCatchData, useCheapestMethod, types);
     }
 
     return entry;
