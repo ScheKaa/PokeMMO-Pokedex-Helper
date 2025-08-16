@@ -61,7 +61,7 @@ export const getEvolutionMessages = (pokemonId) => {
         if (evoPokemonObj) {
             const locations = evoPokemonObj.locations || [];
             const hasCatchableLocation = locations.some(loc => loc.rarity !== 'Uncatchable' && loc.rarity !== 'Unobtainable');
-            const hasLureOnlyLocation = locations.every(loc => loc.rarity === 'Lure');
+            const hasLureOnlyLocation = locations.every(loc => loc.rarity === 'Lure' || loc.rarity === 'Special');
             
             if (!hasCatchableLocation) {
                 uncatchableNames.push(evoPokemonObj.name);
