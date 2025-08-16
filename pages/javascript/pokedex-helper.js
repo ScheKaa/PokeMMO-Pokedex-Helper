@@ -757,7 +757,8 @@ let lastKnownIngamePeriod = localStorage.getItem('lastKnownIngamePeriod');
 const checkIngameTimeChange = () => {
     const { period: currentIngamePeriod } = getCurrentIngameTime();
     if (lastKnownIngamePeriod && lastKnownIngamePeriod !== currentIngamePeriod) {
-        createMessageBox('info', 'The in-game daytime has changed. Consider refreshing the list!');
+        createMessageBox('info', 'The in-game daytime has changed. Refreshing the best catching spots list...');
+        findBestCatchingSpots();
     }
     localStorage.setItem('lastKnownIngamePeriod', currentIngamePeriod);
     lastKnownIngamePeriod = currentIngamePeriod;
@@ -780,8 +781,7 @@ async function initializeApp() {
         populateFilters();
         setupEventListeners();
         displayPokemon();
-        checkIngameTimeChange();
-        setInterval(checkIngameTimeChange, 60 * 1000);
+        setInterval(checkIngameTimeChange, 30 * 1000);
     } catch (error) {
         document.body.innerHTML = `<div style="text-align: center; padding: 50px; font-size: 1.2em; color: red;">
             <h1>Application Error</h1>

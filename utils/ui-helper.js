@@ -81,6 +81,13 @@ export function createMessageBox(type, message, isConfirmation = false, onConfir
     }, 10);
 
     if (!isConfirmation) {
+        setTimeout(() => {
+            messageBox.style.opacity = '0';
+            messageBox.addEventListener('transitionend', () => {
+                messageBox.remove();
+            }, { once: true });
+        }, 3000);
+
         messageBox.addEventListener('click', () => {
             messageBox.style.opacity = '0';
             messageBox.addEventListener('transitionend', () => {
