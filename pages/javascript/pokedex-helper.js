@@ -36,11 +36,20 @@ const catchingSpotSearchInput = document.getElementById("catchingSpotSearch");
 let pokedexStatus = {};
 
 const loadPokemonSprite = (spriteElement, pokemon) => {
-    spriteElement.src = `https://img.pokemondb.net/sprites/black-white/anim/normal/${pokemon.name.toLowerCase()}.gif`;
+    const formatPokemonNameForSprite = (name) => {
+        return name.toLowerCase()
+                    .replace(/♀/g, '-f')
+                    .replace(/♂/g, '-m')
+                    .replace(/\s/g, '-')
+                    .replace(/['.]/g, '');
+    };
+
+    const formattedName = formatPokemonNameForSprite(pokemon.name);
+
+    spriteElement.src = `https://img.pokemondb.net/sprites/black-white/anim/normal/${formattedName}.gif`;
     spriteElement.onerror = () => {
-        spriteElement.src = `https://img.pokemondb.net/sprites/home/normal/${pokemon.name.toLowerCase()}.png`;
+        spriteElement.src = `https://img.pokemondb.net/sprites/home/normal/${formattedName}.png`;
         spriteElement.onerror = () => {
-            //spriteElement.src = `../assets/sprites/${String(pokemon.id).padStart(3, "0")}.png`;
             spriteElement.onerror = null;
         };
     };
