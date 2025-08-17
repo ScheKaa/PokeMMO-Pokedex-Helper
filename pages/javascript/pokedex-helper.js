@@ -517,7 +517,13 @@ const groupPokemonByLocation = () => {
                 const locationKey = `${loc.region_name} - ${cleanLocationName}`;
 
                 if (!locations.has(locationKey)) {
-                    locations.set(locationKey, { pokemonMap: new Map(), uncaughtTriggerCounts: {}, uncaughtTypeCounts: {} });
+                    locations.set(locationKey, { 
+                        pokemonMap: new Map(), 
+                        uncaughtTriggerCounts: {}, 
+                        uncaughtTypeCounts: {},
+                        countedUncaughtPokemonForRarity: new Map(), 
+                        countedUncaughtPokemonForType: new Map() 
+                    });
                 }
                 const locationData = locations.get(locationKey);
                 const pokemonInLocationMap = locationData.pokemonMap;
@@ -528,8 +534,23 @@ const groupPokemonByLocation = () => {
                 pokemonInLocationMap.get(pokemon.id).encounters.push(loc);
 
                 if (shouldDisplayMoreInfo && !pokedexStatus[pokemon.id]?.caught) {
-                    locationData.uncaughtTriggerCounts[loc.rarity] = (locationData.uncaughtTriggerCounts[loc.rarity] || 0) + 1;
-                    locationData.uncaughtTypeCounts[loc.type] = (locationData.uncaughtTypeCounts[loc.type] || 0) + 1;
+                    if (!locationData.countedUncaughtPokemonForRarity.has(loc.rarity)) {
+                        locationData.countedUncaughtPokemonForRarity.set(loc.rarity, new Set());
+                    }
+                    if (!locationData.countedUncaughtPokemonForRarity.get(loc.rarity).has(pokemon.id)) {
+                        locationData.uncaughtTriggerCounts[loc.rarity] = (locationData.uncaughtTriggerCounts[loc.rarity] || 0) + 1;
+                        locationData.countedUncaughtPokemonForRarity.get(loc.rarity).add(pokemon.id);
+                    }
+
+                    if (ENCOUNTER_TYPE.includes(loc.type)) {
+                        if (!locationData.countedUncaughtPokemonForType.has(loc.type)) {
+                            locationData.countedUncaughtPokemonForType.set(loc.type, new Set());
+                        }
+                        if (!locationData.countedUncaughtPokemonForType.get(loc.type).has(pokemon.id)) {
+                            locationData.uncaughtTypeCounts[loc.type] = (locationData.uncaughtTypeCounts[loc.type] || 0) + 1;
+                            locationData.countedUncaughtPokemonForType.get(loc.type).add(pokemon.id);
+                        }
+                    }
                 }
             });
         }
