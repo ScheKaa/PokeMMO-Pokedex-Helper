@@ -438,6 +438,7 @@ const createLocationPokemonEntry = (p, useCheapestMethod) => {
 
     const name = document.createElement('div');
     name.textContent = p.name;
+    name.style.color = getRarityColor(p.encounters);
     pokemonDetailsDiv.appendChild(pokemonIdSmall);
     pokemonDetailsDiv.appendChild(name);
 
