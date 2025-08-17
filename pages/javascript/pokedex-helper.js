@@ -889,7 +889,7 @@ async function initializeApp() {
         if (savedDisplayMoreInfo !== null) {
             displayMoreInfoSwitch.checked = JSON.parse(savedDisplayMoreInfo);
         } else {
-            displayMoreInfoSwitch.checked = false; // Default to No
+            displayMoreInfoSwitch.checked = true; // Default to No
         }
 
         populateFilters();
