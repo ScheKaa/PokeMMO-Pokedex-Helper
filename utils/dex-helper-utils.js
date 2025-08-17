@@ -80,10 +80,10 @@ export const getEvolutionMessages = (pokemonId) => {
 
     let messages = [];
     if (uncatchableNames.length > 0) {
-        messages.push({ text: `Consider keeping, ${uncatchableNames.join(', ')} cannot be caught in the wild.`, type: 'uncatchable' });
+        messages.push({ text: `Consider keeping, <span style="color: #ffd100;">${uncatchableNames.join(', ')}</span> cannot be caught in the wild.`, type: 'uncatchable' });
     }
     if (lureOnlyNames.length > 0) {
-        messages.push({ text: `Note: ${lureOnlyNames.join(', ')} is Lure-only. Consider keeping for evolving/breeding.`, type: 'lure-only' });
+        messages.push({ text: `Note: <span style="color: #ffd100;">${lureOnlyNames.join(', ')}</span> is Lure-only. Consider keeping for evolving/breeding.`, type: 'lure-only' });
     }
     return messages;
 };

@@ -446,7 +446,7 @@ const createLocationPokemonEntry = (p, useCheapestMethod) => {
     evolutionMessages.forEach(msg => {
         const messageElement = document.createElement('p');
         messageElement.className = `uncatchable-evolution-message ${msg.type}-message`;
-        messageElement.textContent = msg.text;
+        messageElement.innerHTML = msg.text;
         pokemonDetailsDiv.appendChild(messageElement);
     });
 
