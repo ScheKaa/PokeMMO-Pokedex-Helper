@@ -1,4 +1,5 @@
 import { POKEMON } from './pokemon.js';
+import { ENCOUNTER_TRIGGERS } from './location.js';
 import { getProfileData } from './profile-manager.js';
 
 /**
@@ -87,14 +88,33 @@ export const getEvolutionMessages = (pokemonId) => {
     return messages;
 };
 
-const rarityOrder = {
-    'Common': 1,
-    'Horde': 2,
-    'Uncommon': 3,
-    'Rare': 4,
-    'Very Rare': 5,
-    'Lure': 6,
-    'Special': 7
+const rarityOrder = ENCOUNTER_TRIGGERS.reduce((acc, trigger) => {
+    acc[trigger.name] = trigger.order;
+    return acc;
+}, {});
+
+export const getRarityColor = (pokemonLocations) => {
+    if (!pokemonLocations || pokemonLocations.length === 0) {
+        return '#FFFFFF';
+    }
+
+    const specialOnly = pokemonLocations.every(loc => loc.rarity === 'Special');
+    if (specialOnly) {
+        return ENCOUNTER_TRIGGERS.find(t => t.name === 'Special')?.color || '#FFFFFF';
+    }
+
+    let lowestRarityOrder = Infinity;
+    let lowestRarityName = '';
+
+    for (const loc of pokemonLocations) {
+        const trigger = ENCOUNTER_TRIGGERS.find(t => t.name === loc.rarity);
+        if (trigger && trigger.order < lowestRarityOrder) {
+            lowestRarityOrder = trigger.order;
+            lowestRarityName = trigger.name;
+        }
+    }
+
+    return ENCOUNTER_TRIGGERS.find(t => t.name === lowestRarityName)?.color || '#FFFFFF';
 };
 
 /**

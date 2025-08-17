@@ -30,15 +30,47 @@ export const REGIONS = [
 ]
 
 export const ENCOUNTER_TRIGGERS = [
-    "Very Common",
-    "Common",
-    "Uncommon",
-    "Rare",
-    "Very Rare",
-    "Special",
-    "Horde",
-    "Lure",
-]
+{
+    name: "Very Common",
+    order: 0,
+    color: "#C0C0C0"
+},
+{
+    name: "Common",
+    order: 1,
+    color: "#C0C0C0"
+},
+{
+    name: "Horde",
+    order: 2,
+    color: "#FFFFFF"
+},
+{
+    name: "Uncommon",
+    order: 3,
+    color: "#1eff00"
+},
+{
+    name: "Rare",
+    order: 4,
+    color: "#0070dd"
+},
+{
+    name: "Very Rare",
+    order: 5,
+    color: "#a335ee"
+},
+{
+    name: "Lure",
+    order: 6,
+    color: "#ffd100"
+},
+{
+    name: "Special",
+    order: 7,
+    color: "#ff8c00"
+}
+];
 
 export const ENCOUNTER_TYPE = [
     "Grass",

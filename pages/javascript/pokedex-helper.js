@@ -6,7 +6,7 @@ import {
 } from "../../utils/location.js";
 import { exportPokedexData, importPokedexData } from "../../utils/import-export.js";
 import { getBestCatchingProbabilities, getTop4CostEfficientBalls, getFastestCatchEstimates } from "../../utils/bestCatcher.js";
-import { getEvolutionLine, getEvolutionMessages, filterLocationsByTimeAndSeason, getCurrentIngameTime } from '../../utils/dex-helper-utils.js';
+import { getEvolutionLine, getEvolutionMessages, filterLocationsByTimeAndSeason, getCurrentIngameTime, getRarityColor } from '../../utils/dex-helper-utils.js';
 import { initHamburgerMenu } from './hamburger-menu.js';
 import { getProfileData, saveProfileData, getActiveProfileName } from '../../utils/profile-manager.js';
 import { displayMessageBox, createMessageBox } from '../../utils/ui-helper.js';
@@ -197,6 +197,13 @@ const createPokemonEntry = (p, regionFilter) => {
     const name = document.createElement("p");
     name.className = "pokemon-name";
     name.textContent = p.name;
+    const hasCatchableLocation = p.locations.some(loc => loc.rarity !== 'Uncatchable' && loc.rarity !== 'Unobtainable');
+
+    if (!hasCatchableLocation) {
+        name.style.color = "#FF0000";
+    } else if (p.locations && p.locations.length > 0) {
+        name.style.color = getRarityColor(p.locations);
+    }
 
     entry.appendChild(sprite);
     entry.appendChild(pokemonIdElement);
@@ -662,8 +669,8 @@ const populateFilters = () => {
 
     ENCOUNTER_TRIGGERS.forEach((trigger) => {
         const option = document.createElement("option");
-        option.value = trigger;
-        option.textContent = trigger;
+        option.value = trigger.name;
+        option.textContent = trigger.name;
         filterEncounterTriggerElement.appendChild(option);
     });
 
