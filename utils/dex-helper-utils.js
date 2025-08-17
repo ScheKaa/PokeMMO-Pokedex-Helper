@@ -1,4 +1,5 @@
-import { POKEMON } from './pokemon.js'
+import { POKEMON } from './pokemon.js';
+import { getProfileData } from './profile-manager.js';
 
 /**
  * @returns {string} The current season in the format 'SEASONX'.
@@ -55,10 +56,15 @@ export const getEvolutionMessages = (pokemonId) => {
     const uncatchableNames = [];
     const lureOnlyNames = [];
     const evolutionLineNames = getEvolutionLine(pokemonId);
+    const pokedexStatus = getProfileData('pokedexStatus', {});
 
     for (const evoName of evolutionLineNames) {
         const evoPokemonObj = POKEMON.find(p => p.name.toLowerCase() === evoName.toLowerCase());
         if (evoPokemonObj) {
+            const isCaught = pokedexStatus[evoPokemonObj.id]?.caught;
+            if (isCaught) {
+                continue;
+            }
             const locations = evoPokemonObj.locations || [];
             const hasCatchableLocation = locations.some(loc => loc.rarity !== 'Uncatchable' && loc.rarity !== 'Unobtainable');
             const hasLureOnlyLocation = locations.every(loc => loc.rarity === 'Lure' || loc.rarity === 'Special');
