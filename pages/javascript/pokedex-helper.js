@@ -18,6 +18,7 @@ const caughtPokemonCountElement = document.getElementById("caughtPokemonCount");
 const bestCatchingSpotsContainer = document.getElementById("bestCatchingSpots");
 const catchingMethodSwitch = document.getElementById("catchingMethodSwitch");
 const displayProbabilitiesSwitch = document.getElementById("displayProbabilitiesSwitch");
+const displayMoreInfoSwitch = document.getElementById("displayMoreInfoSwitch");
 const filterRegionElement = document.getElementById("filterRegion");
 const filterEncounterTriggerElement = document.getElementById("filterEncounterTrigger");
 const filterEncounterTypeElement = document.getElementById("filterEncounterType");
@@ -501,6 +502,7 @@ const createLocationPokemonEntry = (p, useCheapestMethod) => {
 const groupPokemonByLocation = () => {
     const locations = new Map();
     const selectedRegions = ['Kanto', 'Johto', 'Hoenn', 'Sinnoh', 'Unova'];
+    const shouldDisplayMoreInfo = !displayMoreInfoSwitch.checked;
 
     POKEMON.forEach(pokemon => {
         if (pokemon.locations) {
@@ -515,14 +517,20 @@ const groupPokemonByLocation = () => {
                 const locationKey = `${loc.region_name} - ${cleanLocationName}`;
 
                 if (!locations.has(locationKey)) {
-                    locations.set(locationKey, new Map());
+                    locations.set(locationKey, { pokemonMap: new Map(), uncaughtTriggerCounts: {}, uncaughtTypeCounts: {} });
                 }
-                const pokemonInLocationMap = locations.get(locationKey);
+                const locationData = locations.get(locationKey);
+                const pokemonInLocationMap = locationData.pokemonMap;
 
                 if (!pokemonInLocationMap.has(pokemon.id)) {
                     pokemonInLocationMap.set(pokemon.id, { ...pokemon, encounters: [] });
                 }
                 pokemonInLocationMap.get(pokemon.id).encounters.push(loc);
+
+                if (shouldDisplayMoreInfo && !pokedexStatus[pokemon.id]?.caught) {
+                    locationData.uncaughtTriggerCounts[loc.rarity] = (locationData.uncaughtTriggerCounts[loc.rarity] || 0) + 1;
+                    locationData.uncaughtTypeCounts[loc.type] = (locationData.uncaughtTypeCounts[loc.type] || 0) + 1;
+                }
             });
         }
     });
@@ -560,7 +568,8 @@ const findBestCatchingSpots = () => {
         .map(checkbox => checkbox.value);
 
     const relevantLocations = [];
-    locations.forEach((pokemonMap, locationKey) => {
+    locations.forEach((locationData, locationKey) => {
+        const pokemonMap = locationData.pokemonMap;
         const uncaughtHere = Array.from(pokemonMap.values()).filter(p => uncaughtPokemonIds.has(p.id));
 
         const locationRegion = locationKey.split(' - ')[0].toLowerCase();
@@ -570,7 +579,9 @@ const findBestCatchingSpots = () => {
                 relevantLocations.push({
                     locationKey: locationKey,
                     pokemonList: uncaughtHere,
-                    uniqueUncaughtCount: uniqueUncaughtCount
+                    uniqueUncaughtCount: uniqueUncaughtCount,
+                    uncaughtTriggerCounts: locationData.uncaughtTriggerCounts || {},
+                    uncaughtTypeCounts: locationData.uncaughtTypeCounts || {}
                 });
             }
         }
@@ -581,7 +592,11 @@ const findBestCatchingSpots = () => {
     const useCheapestMethod = catchingMethodSwitch.checked;
     const displayProbabilities = !displayProbabilitiesSwitch.checked;
 
-    relevantLocations.forEach(({ locationKey, pokemonList, uniqueUncaughtCount }, index) => {
+    relevantLocations.forEach((locationDataEntry, index) => {
+        const { locationKey, pokemonList, uniqueUncaughtCount } = locationDataEntry;
+        const uncaughtTriggerCounts = locationDataEntry.uncaughtTriggerCounts || {};
+        const uncaughtTypeCounts = locationDataEntry.uncaughtTypeCounts || {};
+
         const details = document.createElement("details");
         if (openDetails.includes(locationKey)) {
             details.open = true;
@@ -591,6 +606,34 @@ const findBestCatchingSpots = () => {
         summary.className = "location-header";
         summary.textContent = `${locationKey} (${uniqueUncaughtCount} uncaught Pokémon)`;
         details.appendChild(summary);
+
+        if (!displayMoreInfoSwitch.checked) {
+            const countsContainer = document.createElement("div");
+            countsContainer.className = "location-counts-container";
+
+            const triggersDiv = document.createElement("div");
+            triggersDiv.className = "location-triggers-counts";
+            triggersDiv.textContent = "Rarities: ";
+            const sortedTriggers = Object.keys(uncaughtTriggerCounts).sort((a, b) => {
+                const orderA = ENCOUNTER_TRIGGERS.find(t => t.name === a)?.order || Infinity;
+                const orderB = ENCOUNTER_TRIGGERS.find(t => t.name === b)?.order || Infinity;
+                return orderA - orderB;
+            });
+            triggersDiv.innerHTML += sortedTriggers.map(trigger => {
+                const triggerColor = ENCOUNTER_TRIGGERS.find(t => t.name === trigger)?.color || '#FFFFFF';
+                return `<span style="color: ${triggerColor};">${trigger}</span> (${uncaughtTriggerCounts[trigger]})`;
+            }).join(', ');
+            countsContainer.appendChild(triggersDiv);
+
+            const typesDiv = document.createElement("div");
+            typesDiv.className = "location-types-counts";
+            typesDiv.textContent = "Types: ";
+            const sortedTypes = Object.keys(uncaughtTypeCounts).sort((a, b) => ENCOUNTER_TYPE.indexOf(a) - ENCOUNTER_TYPE.indexOf(b));
+            typesDiv.innerHTML += sortedTypes.map(type => `${type} (${uncaughtTypeCounts[type]})`).join(', ');
+            countsContainer.appendChild(typesDiv);
+
+            details.appendChild(countsContainer);
+        }
 
         const searchInput = document.createElement('input');
         searchInput.type = 'text';
@@ -794,6 +837,9 @@ const setupEventListeners = () => {
     displayProbabilitiesSwitch.addEventListener('change', () => {
         localStorage.setItem('displayProbabilities', displayProbabilitiesSwitch.checked);
     });
+    displayMoreInfoSwitch.addEventListener('change', () => {
+        localStorage.setItem('displayMoreInfo', displayMoreInfoSwitch.checked);
+    });
     
     pokedexGrid.dataset.listenersInitialized = 'true';
 };
@@ -837,6 +883,13 @@ async function initializeApp() {
             displayProbabilitiesSwitch.checked = JSON.parse(savedDisplayProbabilities);
         } else {
             displayProbabilitiesSwitch.checked = false; // Default to Yes
+        }
+
+        const savedDisplayMoreInfo = localStorage.getItem('displayMoreInfo');
+        if (savedDisplayMoreInfo !== null) {
+            displayMoreInfoSwitch.checked = JSON.parse(savedDisplayMoreInfo);
+        } else {
+            displayMoreInfoSwitch.checked = false; // Default to No
         }
 
         populateFilters();
