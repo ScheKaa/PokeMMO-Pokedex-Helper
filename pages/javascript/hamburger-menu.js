@@ -29,9 +29,9 @@ export const initHamburgerMenu = (onProfileChangeCallback) => {
           console.error("[hamburger-menu.js] One or more essential menu elements were not found in the DOM after insertion.");
           return;
       }
-
+      
       const savedTheme = localStorage.getItem('theme');
-      if (savedTheme === 'dark') {
+      if (savedTheme === 'dark' || !savedTheme) {
         body.classList.add('dark-mode');
         darkModeToggle.checked = true;
       }
