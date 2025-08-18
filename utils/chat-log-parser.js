@@ -25,21 +25,24 @@ export async function processChatLog(chatLogContent) {
 
         const sentOutMatch = entryContent.match(/\[Battle\] (.+?) sent out/i);
         if (sentOutMatch) {
-            currentUserInBattle = sentOutMatch[1].replace(/\[#\w{6}\]|\[#\]/g, '').trim().toLowerCase();
+            const battleUserName = sentOutMatch[1].replace(/\[#\w{6}\]|\[#\]/g, '').trim().toLowerCase();
+            if (battleUserName === activeProfileName) {
+                currentUserInBattle = activeProfileName;
+            } else {
+                currentUserInBattle = null;
+            }
         }
 
         const pokedexEntryMatch = entryContent.match(/\[(.+?)\] \[(#\w{6})?\](.+?)\[#\]'s data was\s+added to the Pokédex\./is);
-        if (pokedexEntryMatch) {
+        if (pokedexEntryMatch && currentUserInBattle === activeProfileName) {
             const pokemonName = pokedexEntryMatch[3].trim();
-            if (currentUserInBattle === activeProfileName) {
-                if (pokemonNames.has(pokemonName.toLowerCase())) {
-                    caughtPokemonEntries.push({ name: pokemonName, timestamp: formattedTimestamp });
-                }
+            if (pokemonNames.has(pokemonName.toLowerCase())) {
+                caughtPokemonEntries.push({ name: pokemonName, timestamp: formattedTimestamp });
             }
         }
 
         const evolutionMatch = entryContent.match(/evolved into (.+?)!/is);
-        if (evolutionMatch) {
+        if (evolutionMatch && currentUserInBattle === activeProfileName) {
             const evolvedPokemonName = evolutionMatch[1].trim();
             const pokemon = POKEMON.find(p => p.name.toLowerCase() === evolvedPokemonName.toLowerCase());
             if (pokemon) {
