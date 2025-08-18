@@ -139,14 +139,21 @@ export const getCurrentIngameTime = () => {
     const inGameHours = Math.floor(gameTotalSeconds / 3600);
     const inGameMinutes = Math.floor((gameTotalSeconds % 3600) / 60);
 
-    let period = (inGameHours >= 21 || inGameHours < 4) ? 'Night' : 'Day';
+    let period;
+    if (inGameHours >= 4 && inGameHours < 11) {
+        period = 'Morning';
+    } else if (inGameHours >= 11 && inGameHours < 21) {
+        period = 'Day';
+    } else {
+        period = 'Night';
+    }
 
     // Format the hours and minutes for display.
     const formattedHours = String(inGameHours).padStart(2, '0');
     const formattedMinutes = String(inGameMinutes).padStart(2, '0');
     const formattedTime = `${formattedHours}:${formattedMinutes}`;
     
-    //console.log(`Current in-game time: ${formattedTime} - Period: ${period}`);
+    // console.log(`Current in-game time: ${formattedTime} - Period: ${period}`);
     return { period, formattedTime };
 };
 
@@ -198,7 +205,10 @@ export const filterLocationsByTimeAndSeason = (locations, selectedRegions) => {
             if (requiredTime.toLowerCase() === 'night' && currentTimeOfDay.toLowerCase() !== 'night') {
                 return false;
             }
-            if ((requiredTime.toLowerCase() === 'day' || requiredTime.toLowerCase() === 'morning') && currentTimeOfDay.toLowerCase() !== 'day') {
+            if (requiredTime === 'day' && currentTimeOfDay.toLowerCase() !== 'day') {
+                return false;
+            }
+            if (requiredTime === 'morning' && currentTimeOfDay.toLowerCase() !== 'morning') {
                 return false;
             }
         }
