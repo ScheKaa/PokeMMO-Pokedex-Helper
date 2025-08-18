@@ -4,44 +4,54 @@ import { displayMessageBox } from './ui-helper.js';
 
 function formatLogTimestamp(timestampStr) {
     const cleanedStr = timestampStr.replace(/[\[\]]/g, '');
-    const parts = cleanedStr.split(/[. ]/);
+    let parts = cleanedStr.split(/[. ]/);
 
     if (parts.length < 4) {
         console.error("Invalid timestamp format:", timestampStr);
         return null;
     }
 
-    const [p1, p2, yearShort, time] = parts;
+    let p1 = parseInt(parts[0]);
+    let p2 = parseInt(parts[1]);
+    let yearShort = parts[2];
+    let time = parts[3];
+
+    let ampm = '';
+    if (parts.length > 4) {
+        ampm = parts[4].toUpperCase();
+    }
+
+    if (ampm) {
+        let [hours, minutes, seconds] = time.split(':').map(Number);
+        if (ampm === 'PM' && hours < 12) {
+            hours += 12;
+        }
+        if (ampm === 'AM' && hours === 12) {
+            hours = 0;
+        }
+        time = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+
     const fullYear = `20${yearShort}`;
 
-    // Normal People Date
-    const dateString1 = `${fullYear}-${p2}-${p1}T${time}`;
-    const dateObj1 = new Date(dateString1);
+    const normalizedDateString1 = `${fullYear}-${String(p2).padStart(2, '0')}-${String(p1).padStart(2, '0')}T${time}`;
+    const normalizedDateString2 = `${fullYear}-${String(p1).padStart(2, '0')}-${String(p2).padStart(2, '0')}T${time}`;
 
-    // Americans...
-    const dateString2 = `${fullYear}-${p1}-${p2}T${time}`;
-    const dateObj2 = new Date(dateString2);
+    const dateObj1 = new Date(normalizedDateString1); // DD.MM.YY format (European)
+    const dateObj2 = new Date(normalizedDateString2); // MM.DD.YY format (American)
 
     const isValidDate = (d) => d instanceof Date && !isNaN(d.getTime());
 
-    if (isValidDate(dateObj1) && isValidDate(dateObj2)) {
-
-        const p1Int = parseInt(p1);
-        const p2Int = parseInt(p2);
-
-        if (p1Int > 12 && p2Int <= 12) {
-            return dateString1 + ".000";
-        } else if (p2Int > 12 && p1Int <= 12) {
-            return dateString2 + ".000";
-        } else {
-            return dateString1 + ".000";
-        }
+    if (p1 > 12 && isValidDate(dateObj1)) {
+        return normalizedDateString1 + ".000";
+    } else if (p2 > 12 && isValidDate(dateObj2)) {
+        return normalizedDateString2 + ".000";
     } else if (isValidDate(dateObj1)) {
-        return dateString1 + ".000";
+        return normalizedDateString1 + ".000";
     } else if (isValidDate(dateObj2)) {
-        return dateString2 + ".000";
+        return normalizedDateString2 + ".000";
     } else {
-        console.error("Neither DD.MM.YY nor MM.DD.YY format was valid for timestamp:", timestampStr);
+        console.error("Could not determine a valid date format for timestamp:", timestampStr);
         return null;
     }
 }
@@ -49,14 +59,10 @@ function formatLogTimestamp(timestampStr) {
 export async function processChatLog(chatLogContent) {
     const activeProfileName = getActiveProfileName().toLowerCase();
     const caughtPokemonEntries = [];
-    let currentUserInBattle = null;
-    let currentLoggedInUser = null;
-    let awaitingInitialUserSentOut = false;
-    let isNPCChallengeActive = false;
-
+    
     const pokemonNames = new Set(POKEMON.map(p => p.name.toLowerCase()));
 
-    const logEntryRegex = /(\[\d{2}\.\d{2}\.\d{2} \d{2}:\d{2}:\d{2}\])([\s\S]*?)(?=\[\d{2}\.\d{2}\.\d{2} \d{2}:\d{2}:\d{2}\]|$)/gs;
+    const logEntryRegex = /(\[\d{2}\.\d{2}\.\d{2} \d{2}:\d{2}:\d{2}( AM| PM)?\]|\[\d{1,2}\/\d{1,2}\/\d{2} \d{1,2}:\d{2}:\d{2} (AM|PM)\])([\s\S]*?)(?=(\[\d{2}\.\d{2}\.\d{2} \d{2}:\d{2}:\d{2}( AM| PM)?\]|\[\d{1,2}\/\d{1,2}\/\d{2} \d{1,2}:\d{2}:\d{2} (AM|PM)\])|$)/gs;
     let match;
 
     while ((match = logEntryRegex.exec(chatLogContent)) !== null) {
