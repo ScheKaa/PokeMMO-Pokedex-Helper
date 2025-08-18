@@ -849,18 +849,25 @@ const setupEventListeners = () => {
     });
 
     uploadChatLogInput.addEventListener("change", async (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            try {
-                const fileContent = await file.text();
-                const newCaughtPokemon = await processChatLog(fileContent);
-                await confirmAndAddCaughtPokemon(newCaughtPokemon, pokedexStatus, saveProfileData, displayPokemon);
-            } catch (error) {
-                console.error("Error processing chat log:", error);
-                displayMessageBox(`Error processing chat log: ${error.message}`, "error");
-            } finally {
-                event.target.value = '';
+        const files = event.target.files;
+        if (files.length > 0) {
+            let totalNewCaughtPokemon = [];
+            for (const file of files) {
+                try {
+                    const fileContent = await file.text();
+                    const newCaughtPokemon = await processChatLog(fileContent);
+                    totalNewCaughtPokemon = totalNewCaughtPokemon.concat(newCaughtPokemon);
+                } catch (error) {
+                    console.error(`Error processing chat log file ${file.name}:`, error);
+                    displayMessageBox(`Error processing chat log file ${file.name}: ${error.message}`, "error");
+                }
             }
+            if (totalNewCaughtPokemon.length > 0) {
+                await confirmAndAddCaughtPokemon(totalNewCaughtPokemon, pokedexStatus, saveProfileData, displayPokemon);
+            } else {
+                displayMessageBox("No new caught Pokémon found in the selected chat logs for your profile.", "info");
+            }
+            event.target.value = ''; 
         }
     });
 
