@@ -50,6 +50,9 @@ export async function processChatLog(chatLogContent) {
     const activeProfileName = getActiveProfileName().toLowerCase();
     const caughtPokemonEntries = [];
     let currentUserInBattle = null;
+    let currentLoggedInUser = null;
+    let awaitingInitialUserSentOut = false;
+    let isNPCChallengeActive = false;
 
     const pokemonNames = new Set(POKEMON.map(p => p.name.toLowerCase()));
 
@@ -61,11 +64,36 @@ export async function processChatLog(chatLogContent) {
         const entryContent = match[2];
         const formattedTimestamp = formatLogTimestamp(entryTimestampStr);
 
+        const loginMatch = entryContent.match(/\[System Announcements\] Welcome to PokeMMO! Enjoy your stay\./i);
+        if (loginMatch) {
+            awaitingInitialUserSentOut = true;
+            currentLoggedInUser = null;
+            currentUserInBattle = null;
+            isNPCChallengeActive = false;
+            continue;
+        }
+
+        const npcChallengeMatch = entryContent.match(/You are challenged by/i);
+        if (npcChallengeMatch) {
+            isNPCChallengeActive = true;
+            continue;
+        }
+
         const sentOutMatch = entryContent.match(/\[Battle\] (.+?) sent out/i);
         if (sentOutMatch) {
             const battleUserName = sentOutMatch[1].replace(/\[#\w{6}\]|\[#\]/g, '').trim().toLowerCase();
-            if (battleUserName === activeProfileName) {
-                currentUserInBattle = activeProfileName;
+
+            if (awaitingInitialUserSentOut) {
+                if (isNPCChallengeActive) {
+                    isNPCChallengeActive = false;
+                } else {
+                    currentLoggedInUser = battleUserName;
+                    awaitingInitialUserSentOut = false;
+                }
+            }
+            
+            if (currentLoggedInUser && battleUserName === currentLoggedInUser) {
+                currentUserInBattle = currentLoggedInUser;
             } else {
                 currentUserInBattle = null;
             }
