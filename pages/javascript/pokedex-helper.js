@@ -7,6 +7,7 @@ import {
 import { exportPokedexData, importPokedexData } from "../../utils/import-export.js";
 import { getBestCatchingProbabilities, getTop4CostEfficientBalls, getFastestCatchEstimates } from "../../utils/bestCatcher.js";
 import { getEvolutionLine, getEvolutionMessages, filterLocationsByTimeAndSeason, getCurrentIngameTime, getRarityColor } from '../../utils/dex-helper-utils.js';
+import { processChatLog, confirmAndAddCaughtPokemon } from '../../utils/chat-log-parser.js';
 import { initHamburgerMenu } from './hamburger-menu.js';
 import { getProfileData, saveProfileData, getActiveProfileName } from '../../utils/profile-manager.js';
 import { displayMessageBox, createMessageBox } from '../../utils/ui-helper.js';
@@ -29,6 +30,8 @@ const filterCaughtDateElement = document.getElementById("filterCaughtDate");
 const sortCaughtDateElement = document.getElementById("sortCaughtDate");
 const exportPokedexBtn = document.getElementById("exportPokedexBtn");
 const importPokedexBtn = document.getElementById("importPokedexBtn");
+const uploadChatLogInput = document.getElementById("uploadChatLogInput");
+const uploadChatLogBtn = document.getElementById("uploadChatLogBtn");
 const togglePokedexBtn = document.getElementById("togglePokedex");
 const findBestCatchingSpotsBtn = document.getElementById("findBestCatchingSpots");
 const regionCheckboxesContainer = document.getElementById("regionCheckboxes");
@@ -838,6 +841,26 @@ const setupEventListeners = () => {
         } catch (error) {
             console.error("Error importing Pokedex data:", error.message);
             displayMessageBox(`Error importing Pokédex data: ${error.message}`, "error");
+        }
+    });
+
+    uploadChatLogBtn.addEventListener("click", () => {
+        uploadChatLogInput.click();
+    });
+
+    uploadChatLogInput.addEventListener("change", async (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            try {
+                const fileContent = await file.text();
+                const newCaughtPokemon = await processChatLog(fileContent);
+                await confirmAndAddCaughtPokemon(newCaughtPokemon, pokedexStatus, saveProfileData, displayPokemon);
+            } catch (error) {
+                console.error("Error processing chat log:", error);
+                displayMessageBox(`Error processing chat log: ${error.message}`, "error");
+            } finally {
+                event.target.value = '';
+            }
         }
     });
 
