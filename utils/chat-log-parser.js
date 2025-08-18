@@ -3,9 +3,47 @@ import { POKEMON } from './pokemon.js';
 import { displayMessageBox } from './ui-helper.js';
 
 function formatLogTimestamp(timestampStr) {
-    const [day, month, year, time] = timestampStr.replace(/[\[\]]/g, '').split(/[. ]/);
-    const fullYear = `20${year}`;
-    return `${fullYear}-${month}-${day}T${time}.000`;
+    const cleanedStr = timestampStr.replace(/[\[\]]/g, '');
+    const parts = cleanedStr.split(/[. ]/);
+
+    if (parts.length < 4) {
+        console.error("Invalid timestamp format:", timestampStr);
+        return null;
+    }
+
+    const [p1, p2, yearShort, time] = parts;
+    const fullYear = `20${yearShort}`;
+
+    // Normal People Date
+    const dateString1 = `${fullYear}-${p2}-${p1}T${time}`;
+    const dateObj1 = new Date(dateString1);
+
+    // Americans...
+    const dateString2 = `${fullYear}-${p1}-${p2}T${time}`;
+    const dateObj2 = new Date(dateString2);
+
+    const isValidDate = (d) => d instanceof Date && !isNaN(d.getTime());
+
+    if (isValidDate(dateObj1) && isValidDate(dateObj2)) {
+
+        const p1Int = parseInt(p1);
+        const p2Int = parseInt(p2);
+
+        if (p1Int > 12 && p2Int <= 12) {
+            return dateString1 + ".000";
+        } else if (p2Int > 12 && p1Int <= 12) {
+            return dateString2 + ".000";
+        } else {
+            return dateString1 + ".000";
+        }
+    } else if (isValidDate(dateObj1)) {
+        return dateString1 + ".000";
+    } else if (isValidDate(dateObj2)) {
+        return dateString2 + ".000";
+    } else {
+        console.error("Neither DD.MM.YY nor MM.DD.YY format was valid for timestamp:", timestampStr);
+        return null;
+    }
 }
 
 export async function processChatLog(chatLogContent) {
