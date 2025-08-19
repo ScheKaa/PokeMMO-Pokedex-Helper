@@ -4,65 +4,43 @@ import { displayMessageBox } from './ui-helper.js';
 
 function formatLogTimestamp(timestampStr) {
     const cleanedStr = timestampStr.replace(/[\[\]]/g, '');
-    let parts = cleanedStr.split(/[. ]/);
+    const parts = cleanedStr.split(/[\s.:\/\\-]/);
 
-    if (parts.length < 4) {
-        console.error("Invalid timestamp format:", timestampStr);
-        return null;
-    }
+    let month, day, year, time;
 
-    let p1 = parseInt(parts[0]);
-    let p2 = parseInt(parts[1]);
-    let yearShort = parts[2];
-    let time = parts[3];
+    if (parts[0].length === 2 && parts[1].length === 2 && parts[2].length === 2) {
+        const p1 = parseInt(parts[0], 10);
+        const p2 = parseInt(parts[1], 10);
 
-    let ampm = '';
-    if (parts.length > 4) {
-        ampm = parts[4].toUpperCase();
-    }
-
-    if (ampm) {
-        let [hours, minutes, seconds] = time.split(':').map(Number);
-        if (ampm === 'PM' && hours < 12) {
-            hours += 12;
+        if (p1 > 12 && p2 <= 12) { 
+            day = parts[0];
+            month = parts[1];
+        } else if (p2 > 12 && p1 <= 12) { 
+            month = parts[0];
+            day = parts[1];
+        } else { //
+            day = parts[0];
+            month = parts[1];
         }
-        if (ampm === 'AM' && hours === 12) {
-            hours = 0;
-        }
-        time = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-    }
-
-    const fullYear = `20${yearShort}`;
-
-    const normalizedDateString1 = `${fullYear}-${String(p2).padStart(2, '0')}-${String(p1).padStart(2, '0')}T${time}`;
-    const normalizedDateString2 = `${fullYear}-${String(p1).padStart(2, '0')}-${String(p2).padStart(2, '0')}T${time}`;
-
-    const dateObj1 = new Date(normalizedDateString1); // DD.MM.YY format (European)
-    const dateObj2 = new Date(normalizedDateString2); // MM.DD.YY format (American)
-
-    const isValidDate = (d) => d instanceof Date && !isNaN(d.getTime());
-
-    if (p1 > 12 && isValidDate(dateObj1)) {
-        return normalizedDateString1 + ".000";
-    } else if (p2 > 12 && isValidDate(dateObj2)) {
-        return normalizedDateString2 + ".000";
-    } else if (isValidDate(dateObj1)) {
-        return normalizedDateString1 + ".000";
-    } else if (isValidDate(dateObj2)) {
-        return normalizedDateString2 + ".000";
+        year = parts[2];
+        time = `${parts[3]}:${parts[4]}:${parts[5]}`;
     } else {
-        console.error("Could not determine a valid date format for timestamp:", timestampStr);
-        return null;
+        console.warn("Unexpected timestamp format:", timestampStr);
+        return null; 
     }
+
+    const fullYear = `20${year}`;
+    return `${fullYear}-${month}-${day}T${time}.000`;
 }
 
 export async function processChatLog(chatLogContent) {
     const activeProfileName = getActiveProfileName().toLowerCase();
     const caughtPokemonEntries = [];
-    
+    let currentUserInBattle = null;
+
     const pokemonNames = new Set(POKEMON.map(p => p.name.toLowerCase()));
 
-    const logEntryRegex = /(\[\d{2}\.\d{2}\.\d{2} \d{2}:\d{2}:\d{2}( AM| PM)?\]|\[\d{1,2}\/\d{1,2}\/\d{2} \d{1,2}:\d{2}:\d{2} (AM|PM)\])([\s\S]*?)(?=(\[\d{2}\.\d{2}\.\d{2} \d{2}:\d{2}:\d{2}( AM| PM)?\]|\[\d{1,2}\/\d{1,2}\/\d{2} \d{1,2}:\d{2}:\d{2} (AM|PM)\])|$)/gs;
+    const logEntryRegex = /(\[\d{2}[./-]\d{2}[./-]\d{2} \d{2}:\d{2}:\d{2}\])([\s\S]*?)(?=\[\d{2}[./-]\d{2}[./-]\d{2} \d{2}:\d{2}:\d{2}\]|$)/gs;
     let match;
 
     while ((match = logEntryRegex.exec(chatLogContent)) !== null) {
@@ -70,36 +48,11 @@ export async function processChatLog(chatLogContent) {
         const entryContent = match[2];
         const formattedTimestamp = formatLogTimestamp(entryTimestampStr);
 
-        const loginMatch = entryContent.match(/\[System Announcements\] Welcome to PokeMMO! Enjoy your stay\./i);
-        if (loginMatch) {
-            awaitingInitialUserSentOut = true;
-            currentLoggedInUser = null;
-            currentUserInBattle = null;
-            isNPCChallengeActive = false;
-            continue;
-        }
-
-        const npcChallengeMatch = entryContent.match(/You are challenged by/i);
-        if (npcChallengeMatch) {
-            isNPCChallengeActive = true;
-            continue;
-        }
-
         const sentOutMatch = entryContent.match(/\[Battle\] (.+?) sent out/i);
         if (sentOutMatch) {
             const battleUserName = sentOutMatch[1].replace(/\[#\w{6}\]|\[#\]/g, '').trim().toLowerCase();
-
-            if (awaitingInitialUserSentOut) {
-                if (isNPCChallengeActive) {
-                    isNPCChallengeActive = false;
-                } else {
-                    currentLoggedInUser = battleUserName;
-                    awaitingInitialUserSentOut = false;
-                }
-            }
-            
-            if (currentLoggedInUser && battleUserName === currentLoggedInUser) {
-                currentUserInBattle = currentLoggedInUser;
+            if (battleUserName === activeProfileName) {
+                currentUserInBattle = activeProfileName;
             } else {
                 currentUserInBattle = null;
             }
