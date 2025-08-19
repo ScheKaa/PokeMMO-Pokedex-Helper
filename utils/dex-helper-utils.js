@@ -170,7 +170,9 @@ export const getCurrentIngameTime = () => {
  */
 export const filterLocationsByTimeAndSeason = (locations, selectedRegions) => {
     const currentSeason = getCurrentSeason();
-    const { period: currentTimeOfDay } = getCurrentIngameTime();
+    let { period: currentTimeOfDay } = getCurrentIngameTime();
+    // For testing purposes
+    // currentTimeOfDay = 'Morning';
     
     if (!selectedRegions || selectedRegions.length === 0) {
         return [];
@@ -188,8 +190,8 @@ export const filterLocationsByTimeAndSeason = (locations, selectedRegions) => {
         const hasSeasonRequirement = !!seasonMatch;
 
         // Time of day check
-        const timeMatch = locationName.match(/(day|night|morning)/i);
-        const hasTimeRequirement = !!timeMatch;
+        const timeMatches = locationName.match(/(day|night|morning)/ig);
+        const hasTimeRequirement = timeMatches && timeMatches.length > 0;
 
         // Season check
         if (hasSeasonRequirement) {
@@ -201,14 +203,8 @@ export const filterLocationsByTimeAndSeason = (locations, selectedRegions) => {
 
         // Time of day check
         if (hasTimeRequirement) {
-            const requiredTime = timeMatch[1];
-            if (requiredTime.toLowerCase() === 'night' && currentTimeOfDay.toLowerCase() !== 'night') {
-                return false;
-            }
-            if (requiredTime === 'day' && currentTimeOfDay.toLowerCase() !== 'day') {
-                return false;
-            }
-            if (requiredTime === 'morning' && currentTimeOfDay.toLowerCase() !== 'morning') {
+            const allowedTimes = timeMatches.map(t => t.toLowerCase());
+            if (!allowedTimes.includes(currentTimeOfDay.toLowerCase())) {
                 return false;
             }
         }
