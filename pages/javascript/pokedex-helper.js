@@ -630,6 +630,7 @@ const findBestCatchingSpots = () => {
         const summary = document.createElement("summary");
         summary.className = "location-header";
         summary.textContent = `${locationKey} (${uniqueUncaughtCount} uncaught Pokémon)`;
+        summary.dataset.locationName = locationKey;
         details.appendChild(summary);
 
         if (!displayMoreInfoSwitch.checked) {
@@ -678,6 +679,19 @@ const findBestCatchingSpots = () => {
         });
         bestCatchingSpotsContainer.appendChild(details);
     });
+
+    const currentCatchingSpotSearchTerm = catchingSpotSearchInput.value.toLowerCase();
+    if (currentCatchingSpotSearchTerm) {
+        bestCatchingSpotsContainer.querySelectorAll('details').forEach(detail => {
+            const locationHeader = detail.querySelector('.location-header').textContent.toLowerCase();
+            if (locationHeader.includes(currentCatchingSpotSearchTerm)) {
+                detail.style.display = '';
+            } else {
+                detail.style.display = 'none';
+            }
+        });
+    }
+
     bestCatchingSpotsContainer.scrollTop = savedScrollTop;
 };
 
@@ -713,8 +727,17 @@ const handleBestSpotsSpriteClick = (e) => {
 
     displayPokemon();
 
+    const parentDetails = clickedSprite.closest('details');
+    const locationKey = parentDetails?.querySelector('.location-header')?.dataset.locationName;
+
     setTimeout(() => {
         findBestCatchingSpots();
+        if (locationKey) {
+            const newDetails = bestCatchingSpotsContainer.querySelector(`details .location-header[data-location-name="${locationKey}"]`)?.closest('details');
+            if (newDetails) {
+                newDetails.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
     }, 300);
 };
 
