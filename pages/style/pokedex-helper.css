@@ -28,6 +28,40 @@ header h1 {
   color: var(--header-text);
 }
 
+.pokemon-count {
+  margin-top: 15px;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--header-text);
+}
+
+.pokedex-note, .disclaimer-note {
+  margin-top: 15px;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--header-text);
+  text-align: left;
+}
+
+.pokedex-note a {
+  color: var(--header-text);
+  text-decoration: underline;
+}
+
+.pokedex-note a:hover {
+  color: var(--button-bg);
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin-top: 25px;
+  padding: 15px;
+  background-color: var( --secondary-bg);
+  border-radius: 8px;
+}
+
 .controls {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
