@@ -35,12 +35,39 @@ header h1 {
   color: var(--header-text);
 }
 
-.pokedex-note, .disclaimer-note {
+.pokedex-note, .disclaimer-note, .instruction-note {
   margin-top: 15px;
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   font-weight: 500;
   color: var(--header-text);
   text-align: left;
+}
+
+.instruction-note summary {
+  cursor: pointer;
+  font-weight: bold;
+  padding: 5px 0;
+  font-size: 1.2rem;
+  color: var(--instructions-color, #4CAF50);
+}
+
+.instruction-note .content {
+  padding-left: 20px;
+  margin-top: 10px;
+}
+
+.instruction-note .content strong {
+  font-size: 1.1rem;
+  color: var(--instructions-strong-color, #66BB6A);
+}
+
+.instruction-note ul {
+  list-style-type: disc;
+  margin-left: 20px;
+}
+
+.instruction-note li {
+  margin-bottom: 5px;
 }
 
 .pokedex-note a {
