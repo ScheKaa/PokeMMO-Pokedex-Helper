@@ -18,7 +18,7 @@ export async function loadPokemonData() {
         DEX = await dexResponse.json();
         catchRates = await catchRatesResponse.json();
 
-        POKEMON = allPokemon.filter(p => p.id <= 648);
+        POKEMON = allPokemon.filter(p => p.id <= 648 && p.obtainable === true);
 
     } catch (error) {
         console.error("Error loading core Pokémon data:", error);
