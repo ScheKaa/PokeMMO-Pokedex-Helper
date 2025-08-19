@@ -28,6 +28,16 @@ export const getCurrentSeason = () => {
     return `SEASON${season}`;
 };
 
+export const getSeasonName = (seasonCode) => {
+    switch (seasonCode) {
+        case 'SEASON0': return 'Spring';
+        case 'SEASON1': return 'Summer';
+        case 'SEASON2': return 'Autumn';
+        case 'SEASON3': return 'Winter';
+        default: return seasonCode;
+    }
+};
+
 export function getEvolutionLine(pokemonId) {
     const visited = new Set();
     const queue = [pokemonId];
@@ -118,24 +128,19 @@ export const getRarityColor = (pokemonLocations) => {
 };
 
 /**
- * @returns {{period: string, formattedTime: string}}
+ * @returns {{inGameHours: number, inGameMinutes: number, period: string, gameTotalSeconds: number}}
  */
-export const getCurrentIngameTime = () => {
-    // Get the current time in UTC to ensure consistency regardless of the user's timezone.
+const getIngameTimeDetails = () => {
     const now = new Date();
     const utcHours = now.getUTCHours();
     const utcMinutes = now.getUTCMinutes();
     const utcSeconds = now.getUTCSeconds();
 
     const totalRealSecondsToday = (utcHours * 3600) + (utcMinutes * 60) + utcSeconds;
-    
-    // An in-game day is 6 real hours (6 * 60 * 60 = 21600 real seconds).
-    const realSecondsInCycle = totalRealSecondsToday % 21600;
+    const realSecondsInCycle = totalRealSecondsToday % 21600; // 6 real hours = 21600 real seconds
 
-    // Convert real seconds in the cycle to in-game seconds (4x real time).
-    const gameTotalSeconds = realSecondsInCycle * 4;
+    const gameTotalSeconds = realSecondsInCycle * 4; // Convert real seconds to in-game seconds (4x speed)
 
-    // Convert total in-game seconds to hours and minutes.
     const inGameHours = Math.floor(gameTotalSeconds / 3600);
     const inGameMinutes = Math.floor((gameTotalSeconds % 3600) / 60);
 
@@ -148,6 +153,12 @@ export const getCurrentIngameTime = () => {
         period = 'Night';
     }
 
+    return { inGameHours, inGameMinutes, period, gameTotalSeconds };
+};
+
+export const getCurrentIngameTime = () => {
+    const { inGameHours, inGameMinutes, period } = getIngameTimeDetails();
+
     // Format the hours and minutes for display.
     const formattedHours = String(inGameHours).padStart(2, '0');
     const formattedMinutes = String(inGameMinutes).padStart(2, '0');
@@ -155,6 +166,46 @@ export const getCurrentIngameTime = () => {
     
     // console.log(`Current in-game time: ${formattedTime} - Period: ${period}`);
     return { period, formattedTime };
+};
+
+export const getTimeUntilNextPeriod = () => {
+    const { inGameHours, gameTotalSeconds } = getIngameTimeDetails();
+
+    let nextPeriodStartInGameHours;
+    let nextPeriodName;
+
+    if (inGameHours >= 4 && inGameHours < 11) { // Current period is Morning (4-10)
+        nextPeriodStartInGameHours = 11; // Next is Day
+        nextPeriodName = 'Day';
+    } else if (inGameHours >= 11 && inGameHours < 21) { // Current period is Day (11-20)
+        nextPeriodStartInGameHours = 21; // Next is Night
+        nextPeriodName = 'Night';
+    } else { // Current period is Night (21-3 or 0-3)
+        nextPeriodStartInGameHours = 4; // Next is Morning
+        nextPeriodName = 'Morning';
+    }
+
+    // Calculate in-game seconds until the next period starts
+    let inGameSecondsUntilNextPeriod;
+    if (nextPeriodStartInGameHours > inGameHours) {
+        inGameSecondsUntilNextPeriod = (nextPeriodStartInGameHours * 3600) - gameTotalSeconds;
+    } else {
+        // If next period is in the next in-game day (e.g., Night to Morning)
+        inGameSecondsUntilNextPeriod = (24 * 3600 - gameTotalSeconds) + (nextPeriodStartInGameHours * 3600);
+    }
+
+    // Convert in-game seconds back to real seconds (1/4 speed)
+    const realSecondsRemaining = inGameSecondsUntilNextPeriod / 4;
+
+    const hours = Math.floor(realSecondsRemaining / 3600);
+    const minutes = Math.floor((realSecondsRemaining % 3600) / 60);
+    const seconds = Math.floor(realSecondsRemaining % 60);
+
+    const formattedHours = String(hours).padStart(2, '0');
+    const formattedMinutes = String(minutes).padStart(2, '0');
+    const formattedSeconds = String(seconds).padStart(2, '0');
+
+    return `${nextPeriodName} in ${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
 };
 
 

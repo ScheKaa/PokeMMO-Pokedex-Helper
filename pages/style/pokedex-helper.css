@@ -234,7 +234,7 @@ details > summary.location-header:hover {
     padding: 8px 10px;
     border: 1px solid var(--border-color);
     border-radius: 5px;
-    width: calc(100% - 20px);
+    width: 100%;
     box-sizing: border-box;
     background-color: var(--primary-bg);
     color: var(--text-color);
@@ -581,6 +581,76 @@ input:checked + .slider:before {
 .region-checkbox-item label {
   font-weight: 500;
   color: var(--text-color);
+}
+
+.ingame-time-display {
+  position: relative;
+  margin: 20px 0;
+  padding: 15px;
+  background-color: var(--secondary-bg);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px var(--shadow-color);
+  text-align: center;
+  min-height: 80px;
+}
+
+.ingame-time-season-top-left {
+  position: absolute;
+  top: 10px;
+  left: 15px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--text-color);
+}
+
+.ingame-time-top-right {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.ingame-time-main {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--button-bg);
+}
+
+.ingame-time-next-period {
+  font-size: 0.9rem;
+  color: var(--secondary-text-color);
+  opacity: 0.7;
+}
+
+@media (max-width: 600px) {
+  .ingame-time-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: unset;
+    padding: 10px; 
+  }
+
+  .ingame-time-season-top-left,
+  .ingame-time-top-right {
+    position: static;
+    margin: 0;
+    text-align: center; 
+    align-items: center;
+  }
+
+  .ingame-time-main {
+    font-size: 1.3rem;
+    margin-top: 5px;
+  }
+
+  .ingame-time-next-period {
+    font-size: 0.8rem;
+  }
 }
 
 .switch-controls-wrapper {

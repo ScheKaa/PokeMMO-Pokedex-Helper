@@ -6,7 +6,7 @@ import {
 } from "../../utils/location.js";
 import { exportPokedexData, importPokedexData } from "../../utils/import-export.js";
 import { getBestCatchingProbabilities, getTop4CostEfficientBalls, getFastestCatchEstimates } from "../../utils/bestCatcher.js";
-import { getEvolutionLine, getEvolutionMessages, filterLocationsByTimeAndSeason, getCurrentIngameTime, getRarityColor } from '../../utils/dex-helper-utils.js';
+import { getEvolutionLine, getEvolutionMessages, filterLocationsByTimeAndSeason, getCurrentIngameTime, getRarityColor, getCurrentSeason, getSeasonName, getTimeUntilNextPeriod } from '../../utils/dex-helper-utils.js';
 import { processChatLog, confirmAndAddCaughtPokemon } from '../../utils/chat-log-parser.js';
 import { initHamburgerMenu } from './hamburger-menu.js';
 import { getProfileData, saveProfileData, getActiveProfileName } from '../../utils/profile-manager.js';
@@ -36,6 +36,7 @@ const togglePokedexBtn = document.getElementById("togglePokedex");
 const findBestCatchingSpotsBtn = document.getElementById("findBestCatchingSpots");
 const regionCheckboxesContainer = document.getElementById("regionCheckboxes");
 const catchingSpotSearchInput = document.getElementById("catchingSpotSearch");
+const ingameTimeElement = document.getElementById("ingameTime");
 
 let pokedexStatus = {};
 
@@ -907,6 +908,26 @@ const checkIngameTimeChange = () => {
     lastKnownIngamePeriod = currentIngamePeriod;
 };
 
+const updateIngameTimeDisplay = () => {
+    const { formattedTime, period } = getCurrentIngameTime();
+    const currentSeasonCode = getCurrentSeason();
+    const currentSeasonName = getSeasonName(currentSeasonCode);
+    const timeUntilNextPeriod = getTimeUntilNextPeriod();
+    const ingameTimeSeasonElement = ingameTimeElement.querySelector('.ingame-time-season-top-left');
+    const ingameTimeNextPeriodElement = ingameTimeElement.querySelector('.ingame-time-next-period');
+    const ingameTimeMainElement = ingameTimeElement.querySelector('.ingame-time-main');
+
+    if (ingameTimeSeasonElement) {
+        ingameTimeSeasonElement.textContent = currentSeasonName;
+    }
+    if (ingameTimeNextPeriodElement) {
+        ingameTimeNextPeriodElement.textContent = timeUntilNextPeriod;
+    }
+    if (ingameTimeMainElement) {
+        ingameTimeMainElement.textContent = `${formattedTime} (${period})`;
+    }
+};
+
 async function initializeApp() {
     try {
         await loadPokemonData();
@@ -946,6 +967,8 @@ async function initializeApp() {
         populateFilters();
         setupEventListeners();
         displayPokemon();
+        updateIngameTimeDisplay();
+        setInterval(updateIngameTimeDisplay, 1000);
         setInterval(checkIngameTimeChange, 30 * 1000);
     } catch (error) {
         document.body.innerHTML = `<div style="text-align: center; padding: 50px; font-size: 1.2em; color: red;">
