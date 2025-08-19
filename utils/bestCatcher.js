@@ -1,6 +1,8 @@
 import { calculatePokemonCatchProbability } from './CatchCalculator.js';
 import { BALLS_CATCHRATE } from './useCatchRate.js';
 
+const safariZoneLocations = ['safari zone', 'great marsh'];
+
 const SUPPORTED_POKE_BALLS = [
     'Poke Ball', 'Net Ball', 'Nest Ball', 'Quick Ball', 'Great Ball', 'Ultra Ball', 'Dusk Ball', 'Safari Ball'
 ].map(ballName => {
@@ -8,7 +10,7 @@ const SUPPORTED_POKE_BALLS = [
     return foundBall ? { name: foundBall.name, price: foundBall.price } : null;
 }).filter(Boolean);
 
-const calculateProbabilities = (pokemon, ballName) => {
+const calculateCatchProbabilities = (pokemon, ballName) => {
     if (!pokemon.stats?.hp) {
         console.warn(`Skipping probability calculation for ${pokemon.name} - Invalid HP.`);
         return null;
@@ -18,27 +20,23 @@ const calculateProbabilities = (pokemon, ballName) => {
     const locationType = pokemon.encounter?.type;
     const locationName = pokemon.encounter?.location;
 
-    const isSafariZone = locationName && locationName.toLowerCase().includes('safari zone');
-
-    const oneHpPercentage = (1 / pokemon.stats.hp) * 100;
+    const isSafariZone = locationName && safariZoneLocations.some(name => locationName.toLowerCase().includes(name));
 
     if (ballName === 'Safari Ball') {
-        if (isSafariZone) {
-            return {
-                fullHp: calculatePokemonCatchProbability(pokemon, 100, ballName, null, pokemonLevel, locationType, locationName),
-                oneHp: null,
-                fullHpSleep: null,
-                oneHpSleep: null
-            };
-        } else {
-            return null;
-        }
+        return isSafariZone ? {
+            fullHp: calculatePokemonCatchProbability(pokemon, 100, ballName, null, pokemonLevel, locationType, locationName),
+            oneHp: null,
+            fullHpSleep: null,
+            oneHpSleep: null
+        } : null;
     }
 
     if (isSafariZone) {
         return null;
     }
 
+    const oneHpPercentage = (1 / pokemon.stats.hp) * 100;
+    
     return {
         fullHp: calculatePokemonCatchProbability(pokemon, 100, ballName, null, pokemonLevel, locationType, locationName),
         oneHp: calculatePokemonCatchProbability(pokemon, oneHpPercentage, ballName, null, pokemonLevel, locationType, locationName),
@@ -59,17 +57,17 @@ export const getBestCatchingProbabilities = (pokemonList) => {
         }
 
         const probabilities = {};
-        const isSafariZoneLocation = pokemon.encounter.location && pokemon.encounter.location.toLowerCase().includes('safari zone');
-
+        const isSafariZone = pokemon.encounter.location && safariZoneLocations.some(name => pokemon.encounter.location.toLowerCase().includes(name));
+        
         let relevantBalls = SUPPORTED_POKE_BALLS;
-        if (isSafariZoneLocation) {
+        if (isSafariZone) {
             relevantBalls = SUPPORTED_POKE_BALLS.filter(ball => ball.name === 'Safari Ball');
         } else {
             relevantBalls = SUPPORTED_POKE_BALLS.filter(ball => ball.name !== 'Safari Ball');
         }
 
         relevantBalls.forEach(ball => {
-            const calculated = calculateProbabilities(pokemon, ball.name);
+            const calculated = calculateCatchProbabilities(pokemon, ball.name);
             if (calculated) {
                 probabilities[ball.name] = calculated;
             }
@@ -94,32 +92,6 @@ const addCostEfficiency = (scores, ballName, ballPrice, condition, probability) 
             price: ballPrice
         });
     }
-};
-
-export const getTop4CostEfficientBalls = (calculatedProbabilities) => {
-    return calculatedProbabilities.map(pokemonResult => {
-        const scores = [];
-
-        SUPPORTED_POKE_BALLS.forEach(ball => {
-            const ballProbs = pokemonResult.probabilities[ball.name];
-            if (!ballProbs) return;
-
-            addCostEfficiency(scores, ball.name, ball.price, 'Full HP', ballProbs.fullHp);
-
-            if (ball.name !== 'Quick Ball' && ball.name !== 'Safari Ball') {
-                addCostEfficiency(scores, ball.name, ball.price, '1 HP', ballProbs.oneHp);
-                addCostEfficiency(scores, ball.name, ball.price, 'Full HP + Sleep', ballProbs.fullHpSleep);
-                addCostEfficiency(scores, ball.name, ball.price, '1 HP + Sleep', ballProbs.oneHpSleep);
-            }
-        });
-
-        return {
-            pokemonId: pokemonResult.pokemonId,
-            pokemonName: pokemonResult.pokemonName,
-            encounterLocation: pokemonResult.encounterLocation,
-            top4CostEfficientBalls: scores.sort((a, b) => a.expectedCost - b.expectedCost).slice(0, 4)
-        };
-    });
 };
 
 const addCatchEstimate = (estimates, ballName, ballPrice, condition, probability, baseTurns, isQuickBall = false, isSafariBall = false) => {
@@ -147,25 +119,40 @@ const addCatchEstimate = (estimates, ballName, ballPrice, condition, probability
     });
 };
 
+const processBallEstimates = (pokemonResult, adderFunction) => {
+    const results = [];
+    
+    SUPPORTED_POKE_BALLS.forEach(ball => {
+        const ballProbs = pokemonResult.probabilities[ball.name];
+        if (!ballProbs) return;
+
+        adderFunction(results, ball.name, ball.price, 'Full HP', ballProbs.fullHp, 1, ball.name === 'Quick Ball', ball.name === 'Safari Ball');
+        
+        if (ball.name !== 'Quick Ball' && ball.name !== 'Safari Ball') {
+            adderFunction(results, ball.name, ball.price, '1 HP', ballProbs.oneHp, 2);
+            adderFunction(results, ball.name, ball.price, 'Full HP + Sleep', ballProbs.fullHpSleep, 2);
+            adderFunction(results, ball.name, ball.price, '1 HP + Sleep', ballProbs.oneHpSleep, 3);
+        }
+    });
+
+    return results;
+};
+
+export const getTop4CostEfficientBalls = (calculatedProbabilities) => {
+    return calculatedProbabilities.map(pokemonResult => {
+        const scores = processBallEstimates(pokemonResult, addCostEfficiency);
+        return {
+            pokemonId: pokemonResult.pokemonId,
+            pokemonName: pokemonResult.pokemonName,
+            encounterLocation: pokemonResult.encounterLocation,
+            top4CostEfficientBalls: scores.sort((a, b) => a.expectedCost - b.expectedCost).slice(0, 4)
+        };
+    });
+};
+
 export const getFastestCatchEstimates = (calculatedProbabilities) => {
     return calculatedProbabilities.map(pokemonResult => {
-        const estimates = [];
-
-        SUPPORTED_POKE_BALLS.forEach(ball => {
-            const ballProbs = pokemonResult.probabilities[ball.name];
-            if (!ballProbs) return;
-
-            const isQuick = ball.name === 'Quick Ball';
-            const isSafari = ball.name === 'Safari Ball';
-            addCatchEstimate(estimates, ball.name, ball.price, 'Full HP', ballProbs.fullHp, 1, isQuick, isSafari);
-
-            if (!isQuick && !isSafari) {
-                addCatchEstimate(estimates, ball.name, ball.price, '1 HP', ballProbs.oneHp, 2);
-                addCatchEstimate(estimates, ball.name, ball.price, 'Full HP + Sleep', ballProbs.fullHpSleep, 2);
-                addCatchEstimate(estimates, ball.name, ball.price, '1 HP + Sleep', ballProbs.oneHpSleep, 3);
-            }
-        });
-
+        const estimates = processBallEstimates(pokemonResult, addCatchEstimate);
         return {
             pokemonId: pokemonResult.pokemonId,
             pokemonName: pokemonResult.pokemonName,
