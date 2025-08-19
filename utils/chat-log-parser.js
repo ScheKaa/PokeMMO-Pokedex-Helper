@@ -1,6 +1,7 @@
 import { getActiveProfileName } from './profile-manager.js';
 import { POKEMON } from './pokemon.js';
 import { displayMessageBox } from './ui-helper.js';
+import { getEvolutionLine } from './dex-helper-utils.js';
 
 function formatLogTimestamp(timestampStr) {
     const cleanedStr = timestampStr.replace(/[\[\]]/g, '');
@@ -62,7 +63,13 @@ export async function processChatLog(chatLogContent) {
         if (pokedexEntryMatch && currentUserInBattle === activeProfileName) {
             const pokemonName = pokedexEntryMatch[3].trim();
             if (pokemonNames.has(pokemonName.toLowerCase())) {
-                caughtPokemonEntries.push({ name: pokemonName, timestamp: formattedTimestamp });
+                caughtPokemonEntries.push({ name: pokemonName, timestamp: formattedTimestamp, type: 'dex' });
+                /*console.log("Pokémon added to caughtPokemonEntries (Pokédex entry):");
+                console.log("  Full Log Entry:", entryContent);
+                console.log("  Regex Match (pokedexEntryMatch):", pokedexEntryMatch);
+                console.log("  Pokémon Name:", pokemonName);
+                console.log("  Timestamp:", formattedTimestamp);
+                console.log("  Type: dex"); */
             }
         }
 
@@ -71,7 +78,13 @@ export async function processChatLog(chatLogContent) {
             const evolvedPokemonName = evolutionMatch[1].trim();
             const pokemon = POKEMON.find(p => p.name.toLowerCase() === evolvedPokemonName.toLowerCase());
             if (pokemon) {
-                caughtPokemonEntries.push({ name: evolvedPokemonName, timestamp: formattedTimestamp });
+                caughtPokemonEntries.push({ name: evolvedPokemonName, timestamp: formattedTimestamp, type: 'evolution' });
+                /*console.log("Pokémon added to caughtPokemonEntries (Evolution):");
+                console.log("  Full Log Entry:", entryContent);
+                console.log("  Regex Match (evolutionMatch):", evolutionMatch);
+                console.log("  Evolved Pokémon Name:", evolvedPokemonName);
+                console.log("  Timestamp:", formattedTimestamp);
+                console.log("  Type: evolution");*/
             }
         }
     }
@@ -94,7 +107,8 @@ export async function confirmAndAddCaughtPokemon(newCaughtPokemon, pokedexStatus
                     id: pokemon.id,
                     name: pokemon.name,
                     caught: true,
-                    timestamp: entry.timestamp
+                    timestamp: entry.timestamp,
+                    type: entry.type
                 });
             }
         }
@@ -108,8 +122,43 @@ export async function confirmAndAddCaughtPokemon(newCaughtPokemon, pokedexStatus
     let updatedCount = 0;
     uniqueNewCaughtPokemon.forEach(entry => {
         const pokemonId = entry.id;
+        const pokemon = POKEMON.find(p => p.id === pokemonId);
 
-        if (!pokedexStatus[pokemonId] || !pokedexStatus[pokemonId].caught || (pokedexStatus[pokemonId].timestamp && new Date(entry.timestamp) > new Date(pokedexStatus[pokemonId].timestamp))) {
+        if (!pokemon) {
+            console.warn(`Pokémon with ID ${pokemonId} not found in POKEMON data.`);
+            return;
+        }
+
+        const evolutionLineNames = getEvolutionLine(pokemonId);
+        const preEvolutionNames = Array.from(evolutionLineNames).filter(name => name.toLowerCase() !== pokemon.name.toLowerCase());
+
+        const hasPreEvolutionCaught = preEvolutionNames.some(evoName => {
+            const evoPokemon = POKEMON.find(p => p.name.toLowerCase() === evoName.toLowerCase());
+            return evoPokemon && pokedexStatus[evoPokemon.id] && pokedexStatus[evoPokemon.id].caught;
+        });
+
+        const hasPreEvolutionInNewCaught = preEvolutionNames.some(evoName => {
+            const foundInNewCaught = newCaughtPokemon.some(newEntry => newEntry.name.toLowerCase() === evoName.toLowerCase());
+            if (foundInNewCaught) {
+                // console.log(`  Pre-evolution '${evoName}' found in newCaughtPokemon for ${pokemon.name}.`);
+            }
+            return foundInNewCaught;
+        });
+
+        /*console.log(`  Checking ${pokemon.name}:`);
+        console.log(`    Current status in pokedexStatus: ${pokedexStatus[pokemonId] ? JSON.stringify(pokedexStatus[pokemonId]) : 'Not found'}`);
+        console.log(`    Is new entry newer? ${pokedexStatus[pokemonId] && pokedexStatus[pokemonId].timestamp ? new Date(entry.timestamp) > new Date(pokedexStatus[pokemonId].timestamp) : 'N/A'}`);
+        console.log(`    Has pre-evolution caught: ${hasPreEvolutionCaught}`);
+        console.log(`    Has pre-evolution in newCaughtPokemon: ${hasPreEvolutionInNewCaught}`);
+        console.log(`    Entry Type: ${entry.type}`);*/
+        let shouldAddPokemon = false;
+        if (entry.type === 'evolution') {
+            shouldAddPokemon = (!pokedexStatus[pokemonId] || !pokedexStatus[pokemonId].caught || (pokedexStatus[pokemonId].timestamp && new Date(entry.timestamp) > new Date(pokedexStatus[pokemonId].timestamp))) && (hasPreEvolutionCaught || hasPreEvolutionInNewCaught);
+        } else { // type === 'dex'
+            shouldAddPokemon = (!pokedexStatus[pokemonId] || !pokedexStatus[pokemonId].caught || (pokedexStatus[pokemonId].timestamp && new Date(entry.timestamp) > new Date(pokedexStatus[pokemonId].timestamp)));
+        }
+
+        if (shouldAddPokemon) {
             pokedexStatus[pokemonId] = {
                 id: entry.id,
                 name: entry.name,
@@ -119,7 +168,7 @@ export async function confirmAndAddCaughtPokemon(newCaughtPokemon, pokedexStatus
             updatedCount++;
             console.log(`Pokemon ${entry.name} added.`);
         } else {
-            console.log(`Pokemon ${entry.name} not added (already caught with a newer or same timestamp).`);
+            console.log(`Pokemon ${entry.name} not added conditions not met for type '${entry.type}'.`);
         }
     });
     savePokedexStatus('pokedexStatus', pokedexStatus);
