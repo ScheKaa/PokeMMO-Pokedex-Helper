@@ -43,6 +43,11 @@ header h1 {
   text-align: left;
 }
 
+.pokedex-note p, .disclaimer-note p {
+  margin: 0;
+  line-height: 1.5;
+}
+
 .instruction-note summary {
   cursor: pointer;
   font-weight: bold;
@@ -52,9 +57,20 @@ header h1 {
 }
 
 .instruction-note .content {
-  padding-left: 20px;
+  padding-left: 5px;
   margin-top: 10px;
 }
+
+.instruction-note .content ul {
+  padding-left: 15px;
+  margin: 0;
+}
+
+.instruction-note .content li {
+  margin-bottom: 10px;
+  word-wrap: break-word;
+}
+
 
 .instruction-note .content strong {
   font-size: 1.1rem;
