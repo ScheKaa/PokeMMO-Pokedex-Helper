@@ -423,6 +423,8 @@ const createLocationPokemonEntry = (p, useCheapestMethod) => {
     entry.dataset.pokemonId = p.id;
     entry.dataset.pokemonName = p.name;
 
+    const spriteContainer = document.createElement('div');
+    spriteContainer.className = 'pokemon-sprite-container';
 
     const sprite = document.createElement("img");
     sprite.className = "pokemon-sprite small";
@@ -430,6 +432,24 @@ const createLocationPokemonEntry = (p, useCheapestMethod) => {
     sprite.setAttribute('title', p.name);
     sprite.dataset.id = p.id;
     loadPokemonSprite(sprite, p);
+    spriteContainer.appendChild(sprite);
+
+const timeExclusivities = [...new Set(p.encounters.map(e => e.timeExclusivity).filter(Boolean))];
+
+const isTimeExclusiveOnly = p.encounters.some(e => e.timeExclusivity && e.timeExclusivityOnly);
+
+if (timeExclusivities.length > 0) {
+    const timeExclusivityElement = document.createElement('p');
+    timeExclusivityElement.className = 'pokemon-time-exclusivity';
+    timeExclusivityElement.textContent = `(${timeExclusivities.join('/')})`;
+
+    if (isTimeExclusiveOnly) {
+        timeExclusivityElement.style.color = '#9ae6b4';
+    }
+    spriteContainer.appendChild(timeExclusivityElement);
+}
+
+
 
     const detailsAndAttributesContainer = document.createElement('div');
     detailsAndAttributesContainer.className = 'details-attributes-container';
@@ -491,7 +511,7 @@ const createLocationPokemonEntry = (p, useCheapestMethod) => {
         detailsAndAttributesContainer.appendChild(div);
     });
 
-    entry.appendChild(sprite);
+    entry.appendChild(spriteContainer);
     entry.appendChild(detailsAndAttributesContainer);
 
     const pokemonCatchData = (useCheapestMethod ? getTop4CostEfficientBalls : getFastestCatchEstimates)(getBestCatchingProbabilities(p.encounters.map(enc => ({ ...p, encounter: enc }))))[0];
@@ -631,6 +651,11 @@ const findBestCatchingSpots = () => {
         summary.className = "location-header";
         summary.textContent = `${locationKey} (${uniqueUncaughtCount} uncaught Pokémon)`;
         summary.dataset.locationName = locationKey;
+
+        const hasTimeExclusivePokemon = pokemonList.some(p => p.encounters.some(e => e.timeExclusivityOnly));
+        if (hasTimeExclusivePokemon) {
+            summary.style.color = '#9ae6b4';
+        }
         details.appendChild(summary);
 
         if (!displayMoreInfoSwitch.checked) {

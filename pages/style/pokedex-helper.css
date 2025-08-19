@@ -271,7 +271,7 @@ details > summary.location-header:hover {
   border-bottom: none;
 }
 
-.location-pokemon-entry > .pokemon-sprite {
+.pokemon-sprite-container {
   grid-area: sprite;
   align-self: center;
 }
@@ -340,6 +340,13 @@ details > summary.location-header:hover {
   line-height: 1.2;
 }
 
+.pokemon-time-exclusivity {
+  font-size: 0.75rem;
+  color: var(--secondary-text-color);
+  margin-top: 5px;
+  text-align: center;
+}
+
 .uncatchable-evolution-message {
   margin: 0;
 }
@@ -403,7 +410,7 @@ details > summary.location-header:hover {
 
 @media (max-width: 768px) {
   .location-pokemon-entry {
-    grid-template-columns: 60px 1fr;
+    grid-template-columns: 75px 1fr;
     gap: 8px 10px;
   }
   .location-pokemon-entry .pokemon-sprite {

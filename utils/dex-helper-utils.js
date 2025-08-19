@@ -2,6 +2,8 @@ import { POKEMON } from './pokemon.js';
 import { ENCOUNTER_TRIGGERS } from './location.js';
 import { getProfileData } from './profile-manager.js';
 
+const safariZoneLocations = ['safari zone', 'great marsh'];
+
 /**
  * @returns {string} The current season in the format 'SEASONX'.
  */
@@ -224,18 +226,32 @@ export const filterLocationsByTimeAndSeason = (locations, selectedRegions) => {
     let { period: currentTimeOfDay } = getCurrentIngameTime();
     // For testing purposes
     // currentTimeOfDay = 'Morning';
-    
+
     if (!selectedRegions || selectedRegions.length === 0) {
         return [];
     }
-    
+
     const filteredByRegion = locations.filter(loc =>
         selectedRegions.includes(loc.region_name)
     );
 
+    const nonSafariLocations = filteredByRegion.filter(loc => {
+        const locationName = loc.location;
+        const isSafariZone = locationName && safariZoneLocations.some(name => locationName.toLowerCase().includes(name));
+        return !isSafariZone;
+    });
+
+    
+    const allRegionalLocationsAreTimeExclusive = nonSafariLocations.every(loc => {
+        const locationName = loc.location;
+        const timeMatches = locationName.match(/(day|night|morning)/ig);
+        return timeMatches && timeMatches.length > 0;
+    });
+
     const filteredLocations = filteredByRegion.filter(loc => {
         const locationName = loc.location;
-        
+        const isSafariZone = locationName && safariZoneLocations.some(name => locationName.toLowerCase().includes(name));
+
         // Season check
         const seasonMatch = locationName.match(/season(\d)/i);
         const hasSeasonRequirement = !!seasonMatch;
@@ -258,7 +274,10 @@ export const filterLocationsByTimeAndSeason = (locations, selectedRegions) => {
             if (!allowedTimes.includes(currentTimeOfDay.toLowerCase())) {
                 return false;
             }
+            loc.timeExclusivity = timeMatches.map(t => t.charAt(0).toUpperCase() + t.slice(1)).join('/');
         }
+        
+        loc.timeExclusivityOnly = !isSafariZone && hasTimeRequirement && allRegionalLocationsAreTimeExclusive;
         return true;
     });
 
