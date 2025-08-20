@@ -7,7 +7,7 @@ export function exportPokemonData(pokemonCollection) {
 const dataStr = JSON.stringify(pokemonCollection, null, 2);
 const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
 
-  const exportFileName = `pokemon_storage_${new Date().toISOString().slice(0, 10)}.json`;
+const exportFileName = `pokemon_storage_${new Date().toISOString().slice(0, 10)}.json`;
 
 const linkElement = document.createElement('a');
 linkElement.setAttribute('href', dataUri);

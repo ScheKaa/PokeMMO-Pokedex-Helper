@@ -883,7 +883,7 @@ const setupEventListeners = () => {
                     importedData[id].timestamp = importedData[id].caught ? new Date().toISOString() : null;
                 }
             });
-            pokedexStatus = importedData;
+            pokedexStatus = updatePokedexStatus(importedData);
             saveProfileData('pokedexStatus', pokedexStatus);
             displayPokemon();
             displayMessageBox("Pokédex data imported successfully!", "success");
@@ -976,20 +976,26 @@ const updateIngameTimeDisplay = () => {
     }
 };
 
+function updatePokedexStatus(existingStatus) {
+    const updatedStatus = {};
+    POKEMON.forEach((p) => {
+        if (existingStatus && existingStatus[p.id]) {
+            updatedStatus[p.id] = existingStatus[p.id];
+        } else {
+            updatedStatus[p.id] = { id: p.id, name: p.name, caught: false, timestamp: null };
+        }
+    });
+
+    return updatedStatus;
+}
 async function initializeApp() {
     try {
         await loadPokemonData();
 
-        let currentPokedexStatus = getProfileData('pokedexStatus', null);
-        if (!currentPokedexStatus) {
-            currentPokedexStatus = {};
-            POKEMON.forEach((p) => {
-                currentPokedexStatus[p.id] = { id: p.id, name: p.name, caught: false, timestamp: null };
-            });
-            saveProfileData('pokedexStatus', currentPokedexStatus);
-        }
-        pokedexStatus = currentPokedexStatus;
-
+        const currentPokedexStatus = getProfileData('pokedexStatus', null);
+        pokedexStatus = updatePokedexStatus(currentPokedexStatus);
+        saveProfileData('pokedexStatus', pokedexStatus);
+        
         // Load switch states from local storage
         const savedCatchingMethod = localStorage.getItem('catchingMethod');
         if (savedCatchingMethod !== null) {
