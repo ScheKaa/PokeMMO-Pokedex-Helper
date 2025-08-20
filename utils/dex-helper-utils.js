@@ -1,8 +1,7 @@
 import { POKEMON } from './pokemon.js';
 import { ENCOUNTER_TRIGGERS } from './location.js';
 import { getProfileData } from './profile-manager.js';
-
-const safariZoneLocations = ['safari zone', 'great marsh'];
+import { isLocationInSelectedRegions, isSafariZoneLocation, matchesSeasonRequirement, matchesTimeRequirement, areAllRegionalLocationsTimeExclusive } from './filter-helper.js';
 
 /**
  * @returns {string} The current season in the format 'SEASONX'.
@@ -232,53 +231,21 @@ export const filterLocationsByTimeAndSeason = (locations, selectedRegions) => {
     }
 
     const filteredByRegion = locations.filter(loc =>
-        selectedRegions.includes(loc.region_name)
+        isLocationInSelectedRegions(loc, selectedRegions)
     );
 
-    const nonSafariLocations = filteredByRegion.filter(loc => {
-        const locationName = loc.location;
-        const isSafariZone = locationName && safariZoneLocations.some(name => locationName.toLowerCase().includes(name));
-        return !isSafariZone;
-    });
-
-    
-    const allRegionalLocationsAreTimeExclusive = nonSafariLocations.every(loc => {
-        const locationName = loc.location;
-        const timeMatches = locationName.match(/(day|night|morning)/ig);
-        return timeMatches && timeMatches.length > 0;
-    });
+    const allRegionalLocationsAreTimeExclusive = areAllRegionalLocationsTimeExclusive(filteredByRegion);
 
     const filteredLocations = filteredByRegion.filter(loc => {
         const locationName = loc.location;
-        const isSafariZone = locationName && safariZoneLocations.some(name => locationName.toLowerCase().includes(name));
+        const isSafari = isSafariZoneLocation(locationName);
 
-        // Season check
-        const seasonMatch = locationName.match(/season(\d)/i);
-        const hasSeasonRequirement = !!seasonMatch;
-
-        // Time of day check
-        const timeMatches = locationName.match(/(day|night|morning)/ig);
-        const hasTimeRequirement = timeMatches && timeMatches.length > 0;
-
-        // Season check
-        if (hasSeasonRequirement) {
-            const requiredSeason = `SEASON${seasonMatch[1]}`;
-            if (requiredSeason.toUpperCase() !== currentSeason.toUpperCase()) {
-                return false;
-            }
-        }
-
-        // Time of day check
-        if (hasTimeRequirement) {
-            const allowedTimes = timeMatches.map(t => t.toLowerCase());
-            if (!allowedTimes.includes(currentTimeOfDay.toLowerCase())) {
-                return false;
-            }
-            loc.timeExclusivity = timeMatches.map(t => t.charAt(0).toUpperCase() + t.slice(1)).join('/');
-        }
+        const seasonMatches = matchesSeasonRequirement(loc, currentSeason);
+        const timeMatches = matchesTimeRequirement(loc, currentTimeOfDay);
         
-        loc.timeExclusivityOnly = !isSafariZone && hasTimeRequirement && allRegionalLocationsAreTimeExclusive;
-        return true;
+        loc.timeExclusivityOnly = !isSafari && (loc.location.match(/(day|night|morning)/ig) && loc.location.match(/(day|night|morning)/ig).length > 0) && allRegionalLocationsAreTimeExclusive;
+        
+        return seasonMatches && timeMatches;
     });
 
     // Sort by rarity

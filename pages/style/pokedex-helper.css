@@ -244,9 +244,8 @@ details > summary.location-header:hover {
   background-color: var(--hamburger-menu-hover-bg);
 }
 
-.location-search-input, 
+.location-search-input,
 .catching-spot-search-input {
-    margin: 10px 0 15px 0;
     padding: 8px 10px;
     border: 1px solid var(--border-color);
     border-radius: 5px;
@@ -254,6 +253,13 @@ details > summary.location-header:hover {
     box-sizing: border-box;
     background-color: var(--primary-bg);
     color: var(--text-color);
+}
+
+.filter-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin: 10px 0 15px 0;
 }
 
 .location-search-input::placeholder,
@@ -505,6 +511,35 @@ details > summary.location-header:hover {
   box-shadow: 0 2px 8px var(--shadow-color);
   flex: 1;
 }
+
+.collapsible-filters summary {
+  cursor: pointer;
+  padding: 0.8rem;
+  border-radius: 0.5rem;
+  background-color: var(--secondary-bg);
+  color: #e2e8f0;
+  box-shadow: 0 2px 8px var(--shadow-color);
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.collapsible-filters summary:hover {
+  background-color: var(--secondary-bg);
+}
+
+.collapsible-filters details[open] summary {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.collapsible-content-wrapper {
+  padding: 1rem;
+  background-color: var(--primary-bg);
+  border-bottom-left-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
+  box-shadow: 0 2px 8px var(--shadow-color);
+}
+
 .switch-container {
   display: flex;
   align-items: center;
@@ -581,12 +616,20 @@ input:checked + .slider:before {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 15px;
+  gap: 10px;
   margin: 20px 0;
   padding: 15px;
   background-color: var(--secondary-bg);
   border-radius: 8px;
   box-shadow: 0 2px 8px var(--shadow-color);
+}
+
+.region-checkboxes-container .control-label {
+  width: 100%; 
+  text-align: center;
+  margin-bottom: 10px;
+  font-weight: bold;
+  color: var(--text-color);
 }
 
 .region-checkbox-item {
