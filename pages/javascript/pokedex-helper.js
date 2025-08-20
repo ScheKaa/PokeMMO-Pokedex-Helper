@@ -743,22 +743,35 @@ const populateFilters = () => {
     while (filterEncounterTriggerElement.options.length > 1) {
         filterEncounterTriggerElement.remove(1);
     }
-    const specialTrigger = ENCOUNTER_TRIGGERS.find(trigger => trigger.name.toLowerCase() === "special");
-    const specialColor = specialTrigger ? specialTrigger.color : null;
-
-    const specialOnlyOption = document.createElement("option");
-    specialOnlyOption.value = "Pheno Exclusive";
-    specialOnlyOption.textContent = "Pheno Exclusive";
-    if (specialColor) {
-        specialOnlyOption.style.color = specialColor;
-    }
-filterEncounterTriggerElement.appendChild(specialOnlyOption);
-    
     ENCOUNTER_TRIGGERS.forEach((trigger) => {
         const option = document.createElement("option");
         option.value = trigger.name;
         option.textContent = trigger.name;
         option.style.color = trigger.color;
+        filterEncounterTriggerElement.appendChild(option);
+    });
+
+    const customRarities = ["Pheno Exclusive", "Dex Required", "Legends"];
+    function getRarityColor(rarity) {
+        const triggerMap = {
+            "Pheno Exclusive": "special",
+            "Dex Required": "lure"
+        };
+        
+        const triggerType = triggerMap[rarity];
+        const LegendsHighlightColor = "#f03a16";
+        if (triggerType) {
+            const trigger = ENCOUNTER_TRIGGERS.find(t => t.name.toLowerCase() === triggerType);
+            return trigger ? trigger.color : LegendsHighlightColor;
+        }
+        return LegendsHighlightColor;
+    }
+    
+    customRarities.forEach((rarity) => {
+        const option = document.createElement("option");
+        option.value = rarity;
+        option.textContent = rarity;
+        option.style.color = getRarityColor(rarity);
         filterEncounterTriggerElement.appendChild(option);
     });
 

@@ -99,6 +99,24 @@ export const getEvolutionMessages = (pokemonId) => {
     return messages;
 };
 
+const NOT_LEGENDARY_IDS = [142]; // Aerodactyl
+
+export const isLegendaryPokemon = (pokemonId) => {
+    if (NOT_LEGENDARY_IDS.includes(pokemonId)) {
+        return false;
+    }
+
+    const pokemon = POKEMON.find(p => p.id === pokemonId);
+    if (!pokemon) return false;
+
+    const hasCatchableLocation = pokemon.locations?.some(loc => loc.rarity !== 'Uncatchable' && loc.rarity !== 'Unobtainable');
+
+    const evolutionLine = getEvolutionLine(pokemonId);
+    const hasEvolutions = evolutionLine.size > 1;
+
+    return !hasCatchableLocation && !hasEvolutions;
+};
+
 const rarityOrder = ENCOUNTER_TRIGGERS.reduce((acc, trigger) => {
     acc[trigger.name] = trigger.order;
     return acc;

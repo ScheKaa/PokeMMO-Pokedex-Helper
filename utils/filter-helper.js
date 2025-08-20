@@ -1,5 +1,6 @@
 import { POKEMON, getPokeDexID } from './pokemon.js';
-import { getEvolutionLine } from './dex-helper-utils.js';
+import { getEvolutionLine, isLegendaryPokemon } from './dex-helper-utils.js';
+const LEGEND_AND_REQUIRED_IDS = [644]; // Zekrom
 
 const safariZoneLocations = ['safari zone', 'great marsh'];
 
@@ -29,8 +30,7 @@ const matchesRegionFilter = (p, regionFilter) => {
 const matchesTriggerFilter = (p, triggerFilter) => {
     if (!triggerFilter) {
         return true;
-    }
-    if (triggerFilter === "Pheno Exclusive") {
+    } else if (triggerFilter === "Pheno Exclusive") {
         if (!p.locations || p.locations.length === 0 || !p.locations.every(l => l.rarity.toLowerCase() === "special")) {
             return false;
         }
@@ -46,6 +46,10 @@ const matchesTriggerFilter = (p, triggerFilter) => {
             }
         }
         return allEvolutionsSpecialOnly;
+    } else if (triggerFilter === "Legends") {
+        return isLegendaryPokemon(p.id) || LEGEND_AND_REQUIRED_IDS.includes(p.id);
+    } else if (triggerFilter === "Dex Required") {
+        return !isLegendaryPokemon(p.id) || LEGEND_AND_REQUIRED_IDS.includes(p.id);
     } else {
         return p.locations.some((l) => l.rarity.toLowerCase() === triggerFilter.toLowerCase());
     }
