@@ -1,7 +1,8 @@
 import { POKEMON } from './pokemon.js';
 import { ENCOUNTER_TRIGGERS } from './location.js';
 import { isLocationInSelectedRegions, isSafariZoneLocation, matchesSeasonRequirement, matchesTimeRequirement } from './filter-helper.js';
-
+const NOT_LEGENDARY_IDS = [142]; // Aerodactyl
+const notAllowedToUse = ["mt. silver"];
 /**
  * @returns {string} The current season in the format 'SEASONX'.
  */
@@ -58,12 +59,10 @@ export function getEvolutionLine(pokemonId) {
         ].forEach(id => !visited.has(id) && queue.push(id));
     }
 
-    return new Set([...visited].map(id => 
+return [...new Set([...visited].map(id => 
     POKEMON.find(p => p.id === id)?.name
-    ).filter(Boolean));
+    ).filter(Boolean))];
 }
-
-const NOT_LEGENDARY_IDS = [142]; // Aerodactyl
 
 export const isLegendaryPokemon = (pokemonId) => {
     if (NOT_LEGENDARY_IDS.includes(pokemonId)) {
@@ -76,7 +75,7 @@ export const isLegendaryPokemon = (pokemonId) => {
     const hasCatchableLocation = pokemon.locations?.some(loc => loc.rarity !== 'Uncatchable' && loc.rarity !== 'Unobtainable');
 
     const evolutionLine = getEvolutionLine(pokemonId);
-    const hasEvolutions = evolutionLine.size > 1;
+    const hasEvolutions = evolutionLine.length > 1;
 
     return !hasCatchableLocation && !hasEvolutions;
 };
@@ -219,8 +218,12 @@ export const filterLocationsByTimeAndSeason = (locations, selectedRegions) => {
     if (!selectedRegions || selectedRegions.length === 0) {
         return [];
     }
+    // Bye Mt.Silver for now..
+    const filteredLocationsByAllowed = locations.filter(loc => {
+        return !notAllowedToUse.some(notAllowed => loc.location.toLowerCase().includes(notAllowed.toLowerCase()));
+    });
 
-    const filteredByRegion = locations.filter(loc =>
+    const filteredByRegion = filteredLocationsByAllowed.filter(loc =>
         isLocationInSelectedRegions(loc, selectedRegions)
     );
 

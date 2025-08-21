@@ -1,19 +1,20 @@
 import { POKEMON } from './pokemon.js';
-import { getProfileData } from './profile-manager.js';
 import { getEvolutionLine } from './dex-helper-utils.js';
-import { isPokemonSafariExclusiveOnly } from './filter-helper.js';
+import { isPokemonSafariExclusiveOnly} from './filter-helper.js';
 
-export const getEvolutionMessages = (pokemonId) => {
+const generateEvolutionNotes = (pokemonId, pokedexStatus) => {
     const uncatchableNames = [];
     const lureOnlyNames = [];
     const safariOnlyNames = [];
     const evolutionLineNames = getEvolutionLine(pokemonId);
-    const pokedexStatus = getProfileData('pokedexStatus', {});
     const originalPokemon = POKEMON.find(p => p.id === pokemonId);
 
     if (!originalPokemon) {
+        // console.log(`generateEvolutionNotes: Original Pokémon with ID ${pokemonId} not found.`);
         return [];
     }
+
+    // console.log(`generateEvolutionNotes: Processing evolution line for ${originalPokemon.name} (ID: ${pokemonId}). Evolution line names:`, evolutionLineNames);
 
     for (const evoName of evolutionLineNames) {
         const evoPokemonObj = POKEMON.find(p => p.name.toLowerCase() === evoName.toLowerCase());
@@ -50,33 +51,24 @@ export const getEvolutionMessages = (pokemonId) => {
 
     let messages = [];
     if (uncatchableNames.length > 0) {
-        messages.push({ text: `Consider keeping, <span style="color: #ffd100;">${uncatchableNames.join(', ')}</span> cannot be caught in the wild.`, type: 'uncatchable' });
+        messages.push({ text: `Consider keeping, <span class="pokemon-note-name-highlight">${uncatchableNames.join(', ')}</span> cannot be caught in the wild.`, type: 'uncatchable' });
     }
     if (lureOnlyNames.length > 0) {
-        messages.push({ text: `Note: <span style="color: #ffd100;">${lureOnlyNames.join(', ')}</span> is Lure-only. Consider keeping for evolving/breeding.`, type: 'lure-only' });
+        messages.push({ text: `Note: <span class="pokemon-note-name-highlight">${lureOnlyNames.join(', ')}</span> is Lure-only. Consider keeping for evolving/breeding.`, type: 'lure-only' });
     }
     if (safariOnlyNames.length > 0) {
-        messages.push({ text: `Note: <span style="color: #ffd100;">${safariOnlyNames.join(', ')}</span> is Safari-only.`, type: 'safari-only' });
+        messages.push({ text: `Note: <span class="pokemon-note-name-highlight">${safariOnlyNames.join(', ')}</span> is Safari-only.`, type: 'safari-only' });
     }
+    // console.log(`generateEvolutionNotes: Generated messages for ${originalPokemon.name}:`, messages);
     return messages;
 };
 
-export const getBetterSpotMessages = (pokemonId, currentRarity, pokemonLocations) => {
-    const betterSpotMessages = [];
-    const pokemonObj = POKEMON.find(p => p.id === pokemonId);
+export const getPokemonNotes = (pokemonId, pokedexStatus) => {
+    const notes = [];
+    notes.push(...generateEvolutionNotes(pokemonId, pokedexStatus));
+    return notes;
+};
 
-    if (!pokemonObj || !pokemonLocations) {
-        return [];
-    }
-
-    const isOnlyLureOrVeryRare = pokemonLocations.every(loc => loc.rarity === "Lure" || loc.rarity === "Very Rare") && (pokemonLocations.includes("Lure") || pokemonLocations.includes("Very Rare"));
-
-    if (isOnlyLureOrVeryRare) {
-        pokemonLocations.forEach(loc => {
-            if (!isSafariZoneLocation(loc.location) && (loc.rarity === "Lure" || loc.rarity === "Very Rare") && hasBetterEncounterSpot(pokemonId, loc.rarity)) {
-                betterSpotMessages.push(`Note: A better encounter spot exists for ${pokemonObj.name}.`);
-            }
-        });
-    }
-    return [...new Set(betterSpotMessages)];
+export const getEvolutionMessages = (pokemonId, pokedexStatus) => {
+    return generateEvolutionNotes(pokemonId, pokedexStatus);
 };

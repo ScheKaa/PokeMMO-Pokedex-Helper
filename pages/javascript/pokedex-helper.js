@@ -7,7 +7,8 @@ import {
 import { exportPokedexData, importPokedexData } from "../../utils/import-export.js";
 import { getBestCatchingProbabilities, getTop4CostEfficientBalls, getFastestCatchEstimates } from "../../utils/bestCatcher.js";
 import { filterLocationsByTimeAndSeason, getCurrentIngameTime, getRarityColor, getCurrentSeason, getSeasonName, getTimeUntilNextPeriod } from '../../utils/dex-helper-utils.js';
-import { getEvolutionMessages, getBetterSpotMessages } from '../../utils/note-helper.js';
+import { getEvolutionMessages, getPokemonNotes } from '../../utils/note-helper.js';
+import { getEvolutionLine } from '../../utils/dex-helper-utils.js';
 import { processChatLog, confirmAndAddCaughtPokemon } from '../../utils/chat-log-parser.js';
 import { initHamburgerMenu } from './hamburger-menu.js';
 import { getProfileData, saveProfileData, getActiveProfileName } from '../../utils/profile-manager.js';
@@ -91,6 +92,15 @@ const createPokemonEntry = (p, regionFilter) => {
     pokemonIdElement.className = "pokemon-id";
     pokemonIdElement.textContent = String(idToDisplay).padStart(3, "0");
 
+    const pokemonNote = document.createElement("button");
+    pokemonNote.className = "pokemon-note control-button";
+    pokemonNote.textContent = "NOTE";
+    pokemonNote.dataset.pokemonId = p.id;
+
+    if (!pokemonNotesCache[p.id] || pokemonNotesCache[p.id].length === 0) {
+        pokemonNote.style.display = "none";
+    }
+
     const name = document.createElement("p");
     name.className = "pokemon-name";
     name.textContent = p.name;
@@ -104,6 +114,7 @@ const createPokemonEntry = (p, regionFilter) => {
 
     entry.appendChild(sprite);
     entry.appendChild(pokemonIdElement);
+    entry.appendChild(pokemonNote);
     entry.appendChild(name);
 
     if (pokedexStatus[p.id]?.caught && pokedexStatus[p.id]?.timestamp) {
@@ -313,7 +324,7 @@ const appendCatchProbabilities = (entry, pokemonCatchData, useCheapestMethod, en
     entry.appendChild(probContainer);
 };
 
-const hasBetterEncounterSpot = (pokemonId, currentRarity) => {
+export const hasBetterEncounterSpot = (pokemonId, currentRarity) => {
     const pokemonObj = POKEMON.find(p => p.id === pokemonId);
     if (!pokemonObj || !pokemonObj.locations) {
         return false;
@@ -385,7 +396,7 @@ if (timeExclusivities.length > 0) {
     pokemonDetailsDiv.appendChild(pokemonIdSmall);
     pokemonDetailsDiv.appendChild(name);
 
-    const evolutionMessages = getEvolutionMessages(p.id);
+    const evolutionMessages = getEvolutionMessages(p.id, pokedexStatus);
     evolutionMessages.forEach(msg => {
         const messageElement = document.createElement('p');
         messageElement.className = `uncatchable-evolution-message ${msg.type}-message`;
@@ -399,7 +410,16 @@ if (timeExclusivities.length > 0) {
     const types = [...new Set(p.encounters.map(e => e.type))].join(', ');
     const levels = [...new Set(p.encounters.map(e => `${e.min_level}-${e.max_level}`))].join(', ');
 
-    const betterSpotMessages = getBetterSpotMessages(p.id, rarities, p.encounters);
+    const betterSpotMessages = [];
+    const isOnlyLureOrVeryRare = rarities.every(r => r === "Lure" || r === "Very Rare") && (rarities.includes("Lure") || rarities.includes("Very Rare"));
+
+    if (isOnlyLureOrVeryRare) {
+        rarities.forEach(rarity => {
+            if ((rarity === "Lure" || rarity === "Very Rare") && hasBetterEncounterSpot(p.id, rarity)) {
+                betterSpotMessages.push(`Note: A better encounter spot exists for ${p.name}.`);
+            }
+        });
+    }
 
     [...new Set(betterSpotMessages)].forEach(msg => {
         const messageElement = document.createElement('p');
@@ -775,13 +795,15 @@ const populateFilters = () => {
         return LegendsHighlightColor;
     }
     
-    customRarities.forEach((rarity) => {
-        const option = document.createElement("option");
-        option.value = rarity;
-        option.textContent = rarity;
-        option.style.color = getRarityColorForCaughtFilter(rarity);
-        filterCaughtElement.appendChild(option);
-    });
+    if (filterCaughtElement.options.length <= 5) {
+        customRarities.forEach((rarity) => {
+            const option = document.createElement("option");
+            option.value = rarity;
+            option.textContent = rarity;
+            option.style.color = getRarityColorForCaughtFilter(rarity);
+            filterCaughtElement.appendChild(option);
+        });
+    }
 
     if (regionCheckboxesContainer.children.length <= 1) {
         REGIONS.forEach(region => {
@@ -810,10 +832,17 @@ const populateFilters = () => {
 const setupEventListeners = () => {
     if (pokedexGrid.dataset.listenersInitialized) return;
 
-    pokedexGrid.addEventListener("click", (e) => {
+    pokedexGrid.addEventListener("click", async (e) => {
         const entry = e.target.closest(".pokemon-entry");
-        if (entry) {
-            const pokemonId = entry.dataset.id;
+        if (!entry) return;
+
+        const pokemonId = entry.dataset.id;
+        if (!pokemonId) return;
+
+        if (e.target.classList.contains("pokemon-note")) {
+            const sprite = entry.querySelector(".pokemon-sprite");
+            await showPokemonNotesPopup(pokemonId, sprite);
+        } else {
             const isCaught = pokedexStatus[pokemonId].caught;
             pokedexStatus[pokemonId].caught = !isCaught;
 
@@ -823,7 +852,8 @@ const setupEventListeners = () => {
                 pokedexStatus[pokemonId].timestamp = null;
             }
             saveProfileData('pokedexStatus', pokedexStatus);
-            displayPokemon();
+            await updateEvolutionNotesInCache(pokemonId);
+            displayPokemon(); 
         }
     });
 
@@ -959,6 +989,107 @@ const updateIngameTimeDisplay = () => {
     }
 };
 
+// leave it here for now, too tired.
+let currentNotePopup = null;
+
+const createNotePopupElement = (pokemon, notes, existingSprite) => {
+    const popupOverlay = document.createElement('div');
+    popupOverlay.className = 'note-popup-overlay';
+
+    const popupContainer = document.createElement('div');
+    popupContainer.className = 'note-popup-container';
+
+    const popupHeader = document.createElement('div');
+    popupHeader.className = 'note-popup-header';
+    popupHeader.innerHTML = `
+        <h2 class="note-popup-title">${pokemon.name} Notes</h2>
+        <button class="note-popup-close-btn">&times;</button>
+    `;
+    popupContainer.appendChild(popupHeader);
+
+    const popupContent = document.createElement('div');
+    popupContent.className = 'pokemon-note-popup-content';
+
+    const spriteContainer = document.createElement('div');
+    spriteContainer.className = 'pokemon-note-popup-sprite-container';
+    
+    const spriteClone = existingSprite.cloneNode(true);
+    spriteClone.classList.remove('small');
+    spriteClone.classList.add('pokemon-note-popup-sprite');
+    spriteContainer.appendChild(spriteClone);
+
+    const pokemonNameElement = document.createElement('p');
+    pokemonNameElement.className = 'pokemon-note-popup-name';
+    pokemonNameElement.textContent = pokemon.name;
+    spriteContainer.appendChild(pokemonNameElement);
+
+    popupContent.appendChild(spriteContainer);
+
+    const notesContainer = document.createElement('div');
+    notesContainer.className = 'pokemon-note-popup-notes';
+    notesContainer.innerHTML = notes.length > 0 
+        ? notes.map(note => `<p class="pokemon-note-item ${note.type}">${note.text}</p>`).join('') 
+        : ''; // Removed "No special notes for this Pokémon."
+    popupContent.appendChild(notesContainer);
+
+    popupContainer.appendChild(popupContent);
+    popupOverlay.appendChild(popupContainer);
+
+    popupHeader.querySelector('.note-popup-close-btn').addEventListener('click', () => {
+        popupOverlay.remove();
+        currentNotePopup = null;
+    });
+
+    popupOverlay.addEventListener('click', (e) => {
+        if (e.target === popupOverlay) {
+            popupOverlay.remove();
+            currentNotePopup = null;
+        }
+    });
+
+    return popupOverlay;
+};
+
+const showPokemonNotesPopup = async (pokemonId, spriteElement) => {
+    const pokemon = POKEMON.find(p => p.id == pokemonId);
+    if (!pokemon) return;
+
+    await updateEvolutionNotesInCache(pokemonId);
+    const notes = pokemonNotesCache[pokemonId] || [];
+
+    if (currentNotePopup) {
+        currentNotePopup.remove();
+    }
+
+    const newPopup = createNotePopupElement(pokemon, notes, spriteElement);
+    document.body.appendChild(newPopup);
+    currentNotePopup = newPopup;
+};
+
+let pokemonNotesCache = {};
+
+const initializePokemonNotes = async () => {
+    pokemonNotesCache = {}; // Clear cache on reload
+    // console.log('initializePokemonNotes: Starting note initialization. Current pokedexStatus:', pokedexStatus);
+    for (const p of POKEMON) {
+        pokemonNotesCache[p.id] = await getPokemonNotes(p.id, pokedexStatus);
+    }
+};
+
+const updateEvolutionNotesInCache = async (changedPokemonId) => {
+    for (const p of POKEMON) {
+        const evolutionLineNames = getEvolutionLine(p.id);
+        const isAffected = evolutionLineNames.some(name => {
+            const evoPokemonObj = POKEMON.find(pk => pk.name.toLowerCase() === name.toLowerCase());
+            return evoPokemonObj && evoPokemonObj.id == changedPokemonId;
+        });
+
+        if (isAffected) {
+            pokemonNotesCache[p.id] = await getPokemonNotes(p.id, pokedexStatus);
+        }
+    }
+};
+
 function updatePokedexStatus(existingStatus) {
     const updatedStatus = {};
     POKEMON.forEach((p) => {
@@ -978,6 +1109,7 @@ async function initializeApp() {
         const currentPokedexStatus = getProfileData('pokedexStatus', null);
         pokedexStatus = updatePokedexStatus(currentPokedexStatus);
         saveProfileData('pokedexStatus', pokedexStatus);
+        // console.log('initializeApp: pokedexStatus after update and save:', pokedexStatus);
         
         // Load switch states from local storage
         const savedCatchingMethod = localStorage.getItem('catchingMethod');
@@ -1010,6 +1142,8 @@ async function initializeApp() {
 
         populateFilters();
         setupEventListeners();
+        filterCaughtElement.value = "Dex Required"; // Set "Dex Required" as default
+        await initializePokemonNotes();
         displayPokemon();
         updateIngameTimeDisplay();
         setInterval(updateIngameTimeDisplay, 1000);

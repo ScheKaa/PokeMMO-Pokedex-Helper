@@ -1,0 +1,163 @@
+/* Styles for the Pokemon Notes Popup */
+.note-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+}
+
+.note-popup-container {
+    background-color: var(--primary-bg);
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    width: 90%;
+    max-width: 400px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border-color);
+}
+
+.note-popup-header {
+    background-color: var(--header-bg);
+    color: var(--header-text);
+    padding: 15px 20px;
+    display: grid;
+    grid-template-columns: 80% 20%;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.note-popup-title {
+    margin: 0;
+    font-size: 1.4em;
+    font-weight: bold;
+    text-align: center;
+}
+
+.note-popup-close-btn {
+    background: none;
+    border: none;
+    color: var(--header-text);
+    font-size: 2em;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.note-popup-close-btn:hover {
+    color: var(--button-bg);
+}
+
+.pokemon-note-popup-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    gap: 15px;
+}
+
+.pokemon-note-popup-sprite-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.pokemon-note-popup-sprite {
+    width: 100px;
+    height: 100px;
+    image-rendering: pixelated;
+}
+
+.pokemon-note-popup-name {
+    font-weight: bold;
+    font-size: 1.1em;
+    color: var(--text-color);
+}
+
+.pokemon-note-popup-notes {
+    width: 100%;
+    max-height: 250px;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    padding: 10px;
+    border-radius: 5px;
+    background-color: var(--secondary-bg);
+    color: var(--text-color);
+}
+
+.pokemon-note-item {
+    margin-bottom: 5px;
+    font-size: 0.9em;
+    line-height: 1.3;
+    color: var(--text-color);
+}
+
+.pokemon-note-item.uncatchable {
+    color: var(--uncatchable-message-color);
+}
+
+.pokemon-note-name-highlight {
+    color: #ffd100;
+}
+
+.pokemon-note-item.lure-only {
+    color: #add8e6;
+}
+
+.pokemon-note-item.safari-only {
+    color: #90ee90;
+}
+
+.pokemon-note {
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: bold;
+    color: var(--button-text);
+    margin-left: 5px;
+    padding: 10px 15px;
+    border-radius: 5px;
+    background-color: var(--button-bg);
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 2px 5px var(--shadow-color);
+    border: none;
+    white-space: nowrap;
+}
+
+.pokemon-note:hover {
+    background-color: var(--button-bg-hover);
+    transform: translateY(-1px);
+}
+
+@media (max-width: 600px) {
+    .note-popup-container {
+        width: 95%;
+        max-width: unset;
+    }
+    .note-popup-header {
+        padding: 10px 15px;
+    }
+    .note-popup-title {
+        font-size: 1.2em;
+    }
+    .pokemon-note-popup-content {
+        padding: 15px;
+        gap: 10px;
+    }
+    .pokemon-note-popup-sprite {
+        width: 80px;
+        height: 80px;
+    }
+    .pokemon-note-popup-notes {
+        max-height: 200px;
+    }
+}
