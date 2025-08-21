@@ -55,25 +55,29 @@ const matchesTypeFilter = (p, typeFilter, exclusiveFilter) => {
     }
 };
 
+const isPhenoExclusivePokemon = (p) => {
+    if (!p.locations || p.locations.length === 0 || !p.locations.every(l => l.rarity.toLowerCase() === "special")) {
+        return false;
+    }
+    const evolutionLineNames = getEvolutionLine(p.id);
+    let allEvolutionsSpecialOnly = true;
+    for (const evoName of evolutionLineNames) {
+        const evoPokemon = POKEMON.find(pk => pk.name === evoName);
+        if (evoPokemon) {
+            if (!evoPokemon.locations || evoPokemon.locations.length === 0 || !evoPokemon.locations.every(l => l.rarity.toLowerCase() === "special")) {
+                allEvolutionsSpecialOnly = false;
+                break;
+            }
+        }
+    }
+    return allEvolutionsSpecialOnly;
+};
+
 const matchesCaughtStatus = (p, caughtFilter, pokedexStatus) => {
     if (caughtFilter === "") {
         return true;
     } else if (caughtFilter === "Pheno Exclusive") {
-        if (!p.locations || p.locations.length === 0 || !p.locations.every(l => l.rarity.toLowerCase() === "special")) {
-            return false;
-        }
-        const evolutionLineNames = getEvolutionLine(p.id);
-        let allEvolutionsSpecialOnly = true;
-        for (const evoName of evolutionLineNames) {
-            const evoPokemon = POKEMON.find(pk => pk.name === evoName);
-            if (evoPokemon) {
-                if (!evoPokemon.locations || evoPokemon.locations.length === 0 || !evoPokemon.locations.every(l => l.rarity.toLowerCase() === "special")) {
-                    allEvolutionsSpecialOnly = false;
-                    break;
-                }
-            }
-        }
-        return allEvolutionsSpecialOnly;
+        return isPhenoExclusivePokemon(p);
     } else if (caughtFilter === "Legends") {
         return isLegendaryPokemon(p.id) || LEGEND_AND_REQUIRED_IDS.includes(p.id);
     } else if (caughtFilter === "Dex Required") {
