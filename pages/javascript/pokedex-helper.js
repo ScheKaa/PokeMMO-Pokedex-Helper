@@ -6,7 +6,8 @@ import {
 } from "../../utils/location.js";
 import { exportPokedexData, importPokedexData } from "../../utils/import-export.js";
 import { getBestCatchingProbabilities, getTop4CostEfficientBalls, getFastestCatchEstimates } from "../../utils/bestCatcher.js";
-import { getEvolutionMessages, filterLocationsByTimeAndSeason, getCurrentIngameTime, getRarityColor, getCurrentSeason, getSeasonName, getTimeUntilNextPeriod } from '../../utils/dex-helper-utils.js';
+import { filterLocationsByTimeAndSeason, getCurrentIngameTime, getRarityColor, getCurrentSeason, getSeasonName, getTimeUntilNextPeriod } from '../../utils/dex-helper-utils.js';
+import { getEvolutionMessages, getBetterSpotMessages } from '../../utils/note-helper.js';
 import { processChatLog, confirmAndAddCaughtPokemon } from '../../utils/chat-log-parser.js';
 import { initHamburgerMenu } from './hamburger-menu.js';
 import { getProfileData, saveProfileData, getActiveProfileName } from '../../utils/profile-manager.js';
@@ -318,14 +319,16 @@ const hasBetterEncounterSpot = (pokemonId, currentRarity) => {
         return false;
     }
 
+    const nonSafariLocations = pokemonObj.locations.filter(loc => !isSafariZoneLocation(loc.location));
+
     if (currentRarity === "Lure") {
-        return pokemonObj.locations.some(loc =>
+        return nonSafariLocations.some(loc =>
             loc.rarity && loc.rarity !== "Special" && loc.rarity !== "Lure"
         );
     }
 
     if (currentRarity === "Very Rare") {
-        return pokemonObj.locations.some(loc =>
+        return nonSafariLocations.some(loc =>
             loc.rarity && loc.rarity !== "Special" && loc.rarity !== "Lure" && loc.rarity !== "Very Rare"
         );
     }
@@ -396,16 +399,7 @@ if (timeExclusivities.length > 0) {
     const types = [...new Set(p.encounters.map(e => e.type))].join(', ');
     const levels = [...new Set(p.encounters.map(e => `${e.min_level}-${e.max_level}`))].join(', ');
 
-    const betterSpotMessages = [];
-    const isOnlyLureOrVeryRare = rarities.every(r => r === "Lure" || r === "Very Rare") && (rarities.includes("Lure") || rarities.includes("Very Rare"));
-
-    if (isOnlyLureOrVeryRare) {
-        rarities.forEach(rarity => {
-            if ((rarity === "Lure" || rarity === "Very Rare") && hasBetterEncounterSpot(p.id, rarity)) {
-                betterSpotMessages.push(`Note: A better encounter spot exists for ${p.name}.`);
-            }
-        });
-    }
+    const betterSpotMessages = getBetterSpotMessages(p.id, rarities, p.encounters);
 
     [...new Set(betterSpotMessages)].forEach(msg => {
         const messageElement = document.createElement('p');

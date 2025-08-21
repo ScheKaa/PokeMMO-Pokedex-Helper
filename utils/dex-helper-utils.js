@@ -1,6 +1,5 @@
 import { POKEMON } from './pokemon.js';
 import { ENCOUNTER_TRIGGERS } from './location.js';
-import { getProfileData } from './profile-manager.js';
 import { isLocationInSelectedRegions, isSafariZoneLocation, matchesSeasonRequirement, matchesTimeRequirement } from './filter-helper.js';
 
 /**
@@ -63,49 +62,6 @@ export function getEvolutionLine(pokemonId) {
     POKEMON.find(p => p.id === id)?.name
     ).filter(Boolean));
 }
-
-export const getEvolutionMessages = (pokemonId) => {
-    const uncatchableNames = [];
-    const lureOnlyNames = [];
-    const evolutionLineNames = getEvolutionLine(pokemonId);
-    const pokedexStatus = getProfileData('pokedexStatus', {});
-    const originalPokemon = POKEMON.find(p => p.id === pokemonId);
-
-    if (!originalPokemon) {
-        return [];
-    }
-
-    for (const evoName of evolutionLineNames) {
-        const evoPokemonObj = POKEMON.find(p => p.name.toLowerCase() === evoName.toLowerCase());
-        if (evoPokemonObj) {
-            const isCaught = pokedexStatus[evoPokemonObj.id]?.caught;
-            
-            if (isCaught) {
-                continue;
-            }
-            
-            const locations = evoPokemonObj.locations || [];
-            const hasCatchableLocation = locations.some(loc => loc.rarity !== 'Uncatchable' && loc.rarity !== 'Unobtainable');
-            const hasLureOnlyLocation = locations.every(loc => loc.rarity === 'Lure' || loc.rarity === 'Special');
-            
-            if (!hasCatchableLocation) {
-                uncatchableNames.push(evoPokemonObj.name);
-            } else if (hasLureOnlyLocation && evoPokemonObj.id !== pokemonId) {
-                //Exclude the original Pokémon from the lure-only note.
-                lureOnlyNames.push(evoPokemonObj.name);
-            }
-        }
-    }
-
-    let messages = [];
-    if (uncatchableNames.length > 0) {
-        messages.push({ text: `Consider keeping, <span style="color: #ffd100;">${uncatchableNames.join(', ')}</span> cannot be caught in the wild.`, type: 'uncatchable' });
-    }
-    if (lureOnlyNames.length > 0) {
-        messages.push({ text: `Note: <span style="color: #ffd100;">${lureOnlyNames.join(', ')}</span> is Lure-only. Consider keeping for evolving/breeding.`, type: 'lure-only' });
-    }
-    return messages;
-};
 
 const NOT_LEGENDARY_IDS = [142]; // Aerodactyl
 
