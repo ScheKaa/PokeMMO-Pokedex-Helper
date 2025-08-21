@@ -1,36 +1,3 @@
-import { catchRates } from './pokemon.js';
-export const BALLS = [
-    {
-        name: 'pokeball',
-        rate: 1,
-        status: true,
-        health: true
-    },
-    {
-        name: 'megaball',
-        rate: 1.5,
-        status: true,
-        health: true
-    },
-    {
-        name: 'ultraball',
-        rate: 2,
-        status: true,
-        health: true
-    },
-    {
-        name: 'bisball',
-        rate: 2.5,
-        status: true,
-        health: true
-    },
-    {
-        name: 'veloxball',
-        rate: 5,
-        status: true,
-        health: false
-    }
-];
 
 export const BALLS_CATCHRATE = [
     {
@@ -138,6 +105,7 @@ export const STATUSES_CATCHRATE = [
     },
 ];
 
+//need to change that in the future, good enough for now
 export const calculateCatchRate = (pkmn_rate, max_hp, current_hp, effectiveBallRate, status) => {
     const x = (((max_hp * 3 - current_hp * 2) * pkmn_rate * effectiveBallRate) / (max_hp * 3)) * status.rate;
 
@@ -147,29 +115,4 @@ export const calculateCatchRate = (pkmn_rate, max_hp, current_hp, effectiveBallR
     const z = (y / 65536) * (y / 65536) * (y / 65536) * (y / 65536) * 100;
     
     return { probabilities: Math.round(z * 10) / 10 };
-};
-
-export const getCatchRates = (dex_id, max_hp) => {
-    const results = [];
-
-    const rateObj = catchRates.find(({ id }) => id === dex_id);
-    const pkmn_rate = typeof rateObj !== "undefined" ? rateObj.rate : 0;
-
-    BALLS.forEach(ball => {
-        STATUSES_CATCHRATE.forEach(status => {
-            if (!ball.status && status.name !== null) {
-                return;
-            }
-            
-            const effectiveBallRate = ball.rate;
-
-            results.push(calculateCatchRate(pkmn_rate, max_hp, max_hp, effectiveBallRate, status));
-            
-            if (ball.health) {
-                results.push(calculateCatchRate(pkmn_rate, max_hp, 1, effectiveBallRate, status));
-            }
-        });
-    });
-
-    return results;
 };

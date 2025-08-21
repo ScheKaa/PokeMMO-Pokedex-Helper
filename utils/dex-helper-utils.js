@@ -69,21 +69,29 @@ export const getEvolutionMessages = (pokemonId) => {
     const lureOnlyNames = [];
     const evolutionLineNames = getEvolutionLine(pokemonId);
     const pokedexStatus = getProfileData('pokedexStatus', {});
+    const originalPokemon = POKEMON.find(p => p.id === pokemonId);
+
+    if (!originalPokemon) {
+        return [];
+    }
 
     for (const evoName of evolutionLineNames) {
         const evoPokemonObj = POKEMON.find(p => p.name.toLowerCase() === evoName.toLowerCase());
         if (evoPokemonObj) {
             const isCaught = pokedexStatus[evoPokemonObj.id]?.caught;
+            
             if (isCaught) {
                 continue;
             }
+            
             const locations = evoPokemonObj.locations || [];
             const hasCatchableLocation = locations.some(loc => loc.rarity !== 'Uncatchable' && loc.rarity !== 'Unobtainable');
             const hasLureOnlyLocation = locations.every(loc => loc.rarity === 'Lure' || loc.rarity === 'Special');
             
             if (!hasCatchableLocation) {
                 uncatchableNames.push(evoPokemonObj.name);
-            } else if (hasLureOnlyLocation) {
+            } else if (hasLureOnlyLocation && evoPokemonObj.id !== pokemonId) {
+                //Exclude the original Pokémon from the lure-only note.
                 lureOnlyNames.push(evoPokemonObj.name);
             }
         }

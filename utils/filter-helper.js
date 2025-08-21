@@ -30,26 +30,6 @@ const matchesRegionFilter = (p, regionFilter) => {
 const matchesTriggerFilter = (p, triggerFilter) => {
     if (!triggerFilter) {
         return true;
-    } else if (triggerFilter === "Pheno Exclusive") {
-        if (!p.locations || p.locations.length === 0 || !p.locations.every(l => l.rarity.toLowerCase() === "special")) {
-            return false;
-        }
-        const evolutionLineNames = getEvolutionLine(p.id);
-        let allEvolutionsSpecialOnly = true;
-        for (const evoName of evolutionLineNames) {
-            const evoPokemon = POKEMON.find(pk => pk.name === evoName);
-            if (evoPokemon) {
-                if (!evoPokemon.locations || evoPokemon.locations.length === 0 || !evoPokemon.locations.every(l => l.rarity.toLowerCase() === "special")) {
-                    allEvolutionsSpecialOnly = false;
-                    break;
-                }
-            }
-        }
-        return allEvolutionsSpecialOnly;
-    } else if (triggerFilter === "Legends") {
-        return isLegendaryPokemon(p.id) || LEGEND_AND_REQUIRED_IDS.includes(p.id);
-    } else if (triggerFilter === "Dex Required") {
-        return !isLegendaryPokemon(p.id) || LEGEND_AND_REQUIRED_IDS.includes(p.id);
     } else {
         return p.locations.some((l) => l.rarity.toLowerCase() === triggerFilter.toLowerCase());
     }
@@ -65,6 +45,26 @@ const matchesTypeFilter = (p, typeFilter) => {
 const matchesCaughtStatus = (p, caughtFilter, pokedexStatus) => {
     if (caughtFilter === "") {
         return true;
+    } else if (caughtFilter === "Pheno Exclusive") {
+        if (!p.locations || p.locations.length === 0 || !p.locations.every(l => l.rarity.toLowerCase() === "special")) {
+            return false;
+        }
+        const evolutionLineNames = getEvolutionLine(p.id);
+        let allEvolutionsSpecialOnly = true;
+        for (const evoName of evolutionLineNames) {
+            const evoPokemon = POKEMON.find(pk => pk.name === evoName);
+            if (evoPokemon) {
+                if (!evoPokemon.locations || evoPokemon.locations.length === 0 || !evoPokemon.locations.every(l => l.rarity.toLowerCase() === "special")) {
+                    allEvolutionsSpecialOnly = false;
+                    break;
+                }
+            }
+        }
+        return allEvolutionsSpecialOnly;
+    } else if (caughtFilter === "Legends") {
+        return isLegendaryPokemon(p.id) || LEGEND_AND_REQUIRED_IDS.includes(p.id);
+    } else if (caughtFilter === "Dex Required") {
+        return !isLegendaryPokemon(p.id) || LEGEND_AND_REQUIRED_IDS.includes(p.id);
     }
     return pokedexStatus[p.id]?.caught.toString() === caughtFilter;
 };
@@ -72,8 +72,16 @@ const matchesCaughtStatus = (p, caughtFilter, pokedexStatus) => {
 const matchesCanBeCaughtStatus = (p, canBeCaughtFilter) => {
     if (canBeCaughtFilter === "") {
         return true;
+    } else if (canBeCaughtFilter === "true") { // Corresponds to "Can Be Caught"
+        return p.locations.length > 0;
+    } else if (canBeCaughtFilter === "false") { // Corresponds to "Cannot Be Caught"
+        return p.locations.length === 0;
+    } else if (canBeCaughtFilter === "obtainable") {
+        return p.obtainable === true;
+    } else if (canBeCaughtFilter === "unobtainable") {
+        return p.obtainable === false;
     }
-    return (p.locations.length > 0).toString() === canBeCaughtFilter;
+    return true; // Should not reach here if all cases are handled
 };
 
 const matchesCaughtDateFilter = (p, caughtDateFilter, pokedexStatus) => {
@@ -96,12 +104,12 @@ export const getFilteredPokemon = (filterOptions, pokedexStatus) => {
 
     return POKEMON.filter((p) => {
         return matchesSearchTerm(p, searchTerm, regionFilter) &&
-               matchesRegionFilter(p, regionFilter) &&
-               matchesTriggerFilter(p, triggerFilter) &&
-               matchesTypeFilter(p, typeFilter) &&
-               matchesCaughtStatus(p, caughtFilter, pokedexStatus) &&
-               matchesCanBeCaughtStatus(p, canBeCaughtFilter) &&
-               matchesCaughtDateFilter(p, caughtDateFilter, pokedexStatus);
+                matchesRegionFilter(p, regionFilter) &&
+                matchesTriggerFilter(p, triggerFilter) &&
+                matchesTypeFilter(p, typeFilter) &&
+                matchesCaughtStatus(p, caughtFilter, pokedexStatus) &&
+                matchesCanBeCaughtStatus(p, canBeCaughtFilter) &&
+                matchesCaughtDateFilter(p, caughtDateFilter, pokedexStatus);
     });
 };
 

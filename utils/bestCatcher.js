@@ -11,11 +11,6 @@ const SUPPORTED_POKE_BALLS = [
 }).filter(Boolean);
 
 const calculateCatchProbabilities = (pokemon, ballName) => {
-    if (!pokemon.stats?.hp) {
-        console.warn(`Skipping probability calculation for ${pokemon.name} - Invalid HP.`);
-        return null;
-    }
-
     const pokemonLevel = pokemon.encounter?.max_level || 1;
     const locationType = pokemon.encounter?.type;
     const locationName = pokemon.encounter?.location;
@@ -35,7 +30,7 @@ const calculateCatchProbabilities = (pokemon, ballName) => {
         return null;
     }
 
-    const oneHpPercentage = (1 / pokemon.stats.hp) * 100;
+    const oneHpPercentage = 1;
     
     return {
         fullHp: calculatePokemonCatchProbability(pokemon, 100, ballName, null, pokemonLevel, locationType, locationName),
@@ -47,10 +42,6 @@ const calculateCatchProbabilities = (pokemon, ballName) => {
 
 export const getBestCatchingProbabilities = (pokemonList) => {
     return pokemonList.map(pokemon => {
-        if (!pokemon.stats?.hp) {
-            console.warn(`Skipping ${pokemon.name} (ID: ${pokemon.id}) - Invalid HP.`);
-            return null;
-        }
         if (!pokemon.encounter || pokemon.encounter.max_level === undefined || pokemon.encounter.type === undefined || pokemon.encounter.location === undefined) {
             console.warn(`Skipping ${pokemon.name} (ID: ${pokemon.id}) - Missing encounter level, type, or location name data for catch calculation.`);
             return null;

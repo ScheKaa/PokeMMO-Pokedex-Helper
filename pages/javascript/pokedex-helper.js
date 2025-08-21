@@ -129,7 +129,7 @@ const displayPokemon = () => {
         triggerFilter: filterEncounterTriggerElement.value,
         typeFilter: filterEncounterTypeElement.value,
         caughtFilter: filterCaughtElement.value,
-        canBeCaughtFilter: document.getElementById("filterCanBeCaught").value,
+        canBeCaughtFilter: filterCanBeCaughtElement.value,
         caughtDateFilter: filterCaughtDateElement.value
     };
     const filteredPokemon = getFilteredPokemon(filterOptions, pokedexStatus);
@@ -751,8 +751,18 @@ const populateFilters = () => {
         filterEncounterTriggerElement.appendChild(option);
     });
 
+    while (filterEncounterTypeElement.options.length > 1) {
+        filterEncounterTypeElement.remove(1);
+    }
+    ENCOUNTER_TYPE.forEach((type) => {
+        const option = document.createElement("option");
+        option.value = type;
+        option.textContent = type;
+        filterEncounterTypeElement.appendChild(option);
+    });
+
     const customRarities = ["Pheno Exclusive", "Dex Required", "Legends"];
-    function getRarityColor(rarity) {
+    function getRarityColorForCaughtFilter(rarity) {
         const triggerMap = {
             "Pheno Exclusive": "special",
             "Dex Required": "lure"
@@ -771,18 +781,8 @@ const populateFilters = () => {
         const option = document.createElement("option");
         option.value = rarity;
         option.textContent = rarity;
-        option.style.color = getRarityColor(rarity);
-        filterEncounterTriggerElement.appendChild(option);
-    });
-
-    while (filterEncounterTypeElement.options.length > 1) {
-        filterEncounterTypeElement.remove(1);
-    }
-    ENCOUNTER_TYPE.forEach((type) => {
-        const option = document.createElement("option");
-        option.value = type;
-        option.textContent = type;
-        filterEncounterTypeElement.appendChild(option);
+        option.style.color = getRarityColorForCaughtFilter(rarity);
+        filterCaughtElement.appendChild(option);
     });
 
     if (regionCheckboxesContainer.children.length <= 1) {

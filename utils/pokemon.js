@@ -18,33 +18,14 @@ export async function loadPokemonData() {
         DEX = await dexResponse.json();
         catchRates = await catchRatesResponse.json();
 
-        POKEMON = allPokemon.filter(p => p.id <= 648 && p.obtainable === true);
+        // POKEMON = allPokemon.filter(p => p.obtainable === true);
+        POKEMON = allPokemon;
 
     } catch (error) {
         console.error("Error loading core Pokémon data:", error);
         throw error;
     }
 }
-
-export const EGG_GROUPS = {
-    "monster": { label: "monster", color: "#775544" },
-    "water a": { label: "water a", color: "#66ccff" },
-    "bug": { label: "bug", color: "#aabb22" },
-    "flying": { label: "flying", color: "#8899ff" },
-    "field": { label: "field", color: "#ddbb55" },
-    "fairy": { label: "fairy", color: "#ee99ee" },
-    "plant": { label: "plant", color: "#77cc55" },
-    "humanoid": { label: "humanoid", color: "#bb5544" },
-    "water c": { label: "water c", color: "#3399ff" },
-    "mineral": { label: "mineral", color: "#bbaa67" },
-    "chaos": { label: "chaos", color: "#7070bf" },
-    "water b": { label: "water b", color: "#4d9ec6" },
-    "ditto": { label: "ditto", color: "#cabbd7" },
-    "dragon": { label: "dragon", color: "#7766ed" },
-    "cannot breed": { label: "cannot breed", color: "#8a8a8a" },
-    "genderless": { label: "genderless", color: "#8a8a8a" }
-};
-
 export const TYPES = {
     "NORMAL": { label: "Normal", color: "#a4acaf" },
     "FIGHTING": { label: "Fighting", color: "#d56723" },
@@ -65,12 +46,6 @@ export const TYPES = {
     "DARK": { label: "Dark", color: "#707070" },
 };
 
-export const getEggGroups = () => {
-    return Object.keys(EGG_GROUPS)
-        .map(id => ({ key: id, label: EGG_GROUPS[id].label }))
-};
-
-export const getEggGroup = id => EGG_GROUPS[id];
 
 export const getType = id => TYPES[id];
 
@@ -102,33 +77,4 @@ export const getPokeDexIDs = (pkmnid) => {
         sinnoh_dex: getPokeDexID(pkmnid, "sinnoh"),
         unova_dex: getPokeDexID(pkmnid, "unova"),
     };
-};
-
-export const getBaseForm = (id) => {
-    let pkmn = POKEMON.find(pkmn => pkmn.evolutions.some(evo => evo.id === id));
-    if (!pkmn) return getPokemon(id);
-    while (pkmn.evolutions.some(evo => evo.id !== id)) {
-        pkmn = POKEMON.find(p => p.evolutions.some(evo => evo.id === p.id));
-    }
-    return pkmn;
-};
-
-export const getPokemonThatCanHoldItem = (itemId) => {
-    return POKEMON.filter(pkmn => pkmn.held_items.some(item => item.id === itemId));
-};
-
-export const getPokemonEvolutions = (id) => {
-    const pkmn = POKEMON.find(pkmn => pkmn.id === id);
-    if (pkmn) return pkmn.evoTree;
-};
-
-export const isPokemonInLocation = (data = { region: false, route: false, pokemon }) => {
-    const { region, route } = data;
-    if (!region && !route) return true;
-    return true;
-};
-
-export const getPokemonName = id => {
-    const pkmn = POKEMON.find(pkmn => pkmn.id === id);
-    if (pkmn) return pkmn.name;
 };

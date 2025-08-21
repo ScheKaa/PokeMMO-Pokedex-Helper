@@ -1,4 +1,4 @@
-import { POKEMON, catchRates } from './pokemon.js';
+import {catchRates } from './pokemon.js';
 import { BALLS_CATCHRATE, STATUSES_CATCHRATE, calculateCatchRate } from './useCatchRate.js';
 
 const getNestBallRate = (pokemonLevel) => {
@@ -64,9 +64,10 @@ export const calculatePokemonCatchProbability = (pokemonData, hpPercent, ballNam
         effectiveBallRate = getNestBallRate(pokemonLevel);
     }
 
-    const max_hp = pokemonData.stats?.hp;
-    if (pkmnRate !== null && max_hp !== undefined) {
-        const current_hp = Math.floor((hpPercent / 100) * max_hp);
+    // to reduce calculations, might change that in the future
+    const max_hp = 100; 
+    if (pkmnRate !== null) {
+        const current_hp = 1;
 
         const result = calculateCatchRate(
             pkmnRate,
