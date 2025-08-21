@@ -1,8 +1,8 @@
 import { POKEMON, getPokeDexID } from './pokemon.js';
-import { getEvolutionLine, isLegendaryPokemon } from './dex-helper-utils.js';
+import { getEvolutionLine, isLegendaryPokemon, areAllNonSafariLocationsTimeTagged } from './dex-helper-utils.js';
 const LEGEND_AND_REQUIRED_IDS = [644]; // Zekrom
 
-const safariZoneLocations = ['safari zone', 'great marsh'];
+const safariZoneLocations = ['safari zone', 'great marsh', 'altering cave'];
 
 const matchesSearchTerm = (p, searchTerm, regionFilter) => {
     if (!searchTerm) {
@@ -27,19 +27,32 @@ const matchesRegionFilter = (p, regionFilter) => {
     return regionalIdForFilter !== undefined && regionalIdForFilter !== 0;
 };
 
-const matchesTriggerFilter = (p, triggerFilter) => {
+const matchesTriggerFilter = (p, triggerFilter, exclusiveFilter) => {
     if (!triggerFilter) {
         return true;
+    }
+    if (!p.locations || p.locations.length === 0) {
+        return false;
+    }
+    if (exclusiveFilter) {
+        return p.locations.every((l) => l.rarity.toLowerCase() === triggerFilter.toLowerCase());
     } else {
         return p.locations.some((l) => l.rarity.toLowerCase() === triggerFilter.toLowerCase());
     }
 };
 
-const matchesTypeFilter = (p, typeFilter) => {
+const matchesTypeFilter = (p, typeFilter, exclusiveFilter) => {
     if (!typeFilter) {
         return true;
     }
-    return p.locations.some((l) => l.type.toLowerCase() === typeFilter.toLowerCase());
+    if (!p.locations || p.locations.length === 0) {
+        return false;
+    }
+    if (exclusiveFilter) {
+        return p.locations.every((l) => l.type.toLowerCase() === typeFilter.toLowerCase());
+    } else {
+        return p.locations.some((l) => l.type.toLowerCase() === typeFilter.toLowerCase());
+    }
 };
 
 const matchesCaughtStatus = (p, caughtFilter, pokedexStatus) => {
@@ -65,6 +78,10 @@ const matchesCaughtStatus = (p, caughtFilter, pokedexStatus) => {
         return isLegendaryPokemon(p.id) || LEGEND_AND_REQUIRED_IDS.includes(p.id);
     } else if (caughtFilter === "Dex Required") {
         return !isLegendaryPokemon(p.id) || LEGEND_AND_REQUIRED_IDS.includes(p.id);
+    } else if (caughtFilter === "Safari Exclusive") {
+        return isPokemonSafariExclusiveOnly(p);
+    } else if (caughtFilter === "Time Exclusive") {
+        return isPokemonTimeExclusiveOnly(p);
     }
     return pokedexStatus[p.id]?.caught.toString() === caughtFilter;
 };
@@ -100,13 +117,13 @@ const matchesCaughtDateFilter = (p, caughtDateFilter, pokedexStatus) => {
 };
 
 export const getFilteredPokemon = (filterOptions, pokedexStatus) => {
-    const { searchTerm, regionFilter, triggerFilter, typeFilter, caughtFilter, canBeCaughtFilter, caughtDateFilter } = filterOptions;
+    const { searchTerm, regionFilter, triggerFilter, typeFilter, caughtFilter, canBeCaughtFilter, caughtDateFilter, exclusiveFilter } = filterOptions;
 
     return POKEMON.filter((p) => {
         return matchesSearchTerm(p, searchTerm, regionFilter) &&
                 matchesRegionFilter(p, regionFilter) &&
-                matchesTriggerFilter(p, triggerFilter) &&
-                matchesTypeFilter(p, typeFilter) &&
+                matchesTriggerFilter(p, triggerFilter, exclusiveFilter) &&
+                matchesTypeFilter(p, typeFilter, exclusiveFilter) &&
                 matchesCaughtStatus(p, caughtFilter, pokedexStatus) &&
                 matchesCanBeCaughtStatus(p, canBeCaughtFilter) &&
                 matchesCaughtDateFilter(p, caughtDateFilter, pokedexStatus);
@@ -166,6 +183,13 @@ export const isSafariZoneLocation = (locationName) => {
     return locationName && safariZoneLocations.some(name => locationName.toLowerCase().includes(name));
 };
 
+export const isPokemonSafariExclusiveOnly = (pokemon) => {
+    if (!pokemon.locations || pokemon.locations.length === 0) {
+        return false;
+    }
+    return pokemon.locations.every(loc => isSafariZoneLocation(loc.location));
+};
+
 export const matchesSeasonRequirement = (loc, currentSeason) => {
     const seasonMatch = loc.location.match(/season(\d)/i);
     const hasSeasonRequirement = !!seasonMatch;
@@ -206,5 +230,8 @@ export const filterLocationsByPokemon = (locations, pokemonNameFilter) => {
 };
 
 export const isPokemonTimeExclusiveOnly = (pokemon) => {
-    return pokemon.encounters.some(e => e.timeExclusivity && e.timeExclusivityOnly);
+    if (!pokemon.locations || pokemon.locations.length === 0) {
+        return false;
+    }
+    return areAllNonSafariLocationsTimeTagged(pokemon.locations);
 };

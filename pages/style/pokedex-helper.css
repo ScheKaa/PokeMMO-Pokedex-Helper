@@ -114,6 +114,25 @@ header h1 {
   background-color: var( --secondary-bg);
   border-radius: 8px;
 }
+
+.controls .control-group {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  justify-content: center;
+}
+
+.controls .control-group input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--button-bg);
+}
+
+.controls .control-group label {
+  font-weight: 500;
+  color: var(--text-color);
+}
+
 .profile-controls {
   display: flex;
   gap: 10px;

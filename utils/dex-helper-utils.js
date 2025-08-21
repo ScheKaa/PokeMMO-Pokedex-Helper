@@ -1,7 +1,7 @@
 import { POKEMON } from './pokemon.js';
 import { ENCOUNTER_TRIGGERS } from './location.js';
 import { getProfileData } from './profile-manager.js';
-import { isLocationInSelectedRegions, isSafariZoneLocation, matchesSeasonRequirement, matchesTimeRequirement, areAllRegionalLocationsTimeExclusive } from './filter-helper.js';
+import { isLocationInSelectedRegions, isSafariZoneLocation, matchesSeasonRequirement, matchesTimeRequirement } from './filter-helper.js';
 
 /**
  * @returns {string} The current season in the format 'SEASONX'.
@@ -235,8 +235,16 @@ export const getTimeUntilNextPeriod = () => {
     return `${nextPeriodName} in ${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
 };
 
-
-
+export const areAllNonSafariLocationsTimeTagged = (locations) => {
+    const nonSafariLocations = locations.filter(loc => !isSafariZoneLocation(loc.location));
+    if (nonSafariLocations.length === 0) {
+        return false;
+    }
+    return nonSafariLocations.every(loc => {
+        const timeMatches = loc.location.match(/(day|night|morning)/ig);
+        return timeMatches && timeMatches.length > 0;
+    });
+};
 
 /**
  * Filters and sorts locations for a given Pokémon based on the current in-game time, season, and regional filters.
@@ -260,7 +268,7 @@ export const filterLocationsByTimeAndSeason = (locations, selectedRegions) => {
         isLocationInSelectedRegions(loc, selectedRegions)
     );
 
-    const allRegionalLocationsAreTimeExclusive = areAllRegionalLocationsTimeExclusive(filteredByRegion);
+    const allRegionalLocationsAreTimeExclusive = areAllNonSafariLocationsTimeTagged(filteredByRegion);
 
     const filteredLocations = filteredByRegion.filter(loc => {
         const locationName = loc.location;

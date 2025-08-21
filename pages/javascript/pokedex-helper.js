@@ -41,6 +41,7 @@ const pokemonFilterInput = document.getElementById("pokemonFilterInput");
 const ingameTimeElement = document.getElementById("ingameTime");
 const excludeSafariCheckbox = document.getElementById("excludeSafariCheckbox");
 const prioritizeTimeExclusiveCheckbox = document.getElementById("prioritizeTimeExclusiveCheckbox");
+const exclusiveRarityEncounterFilteringCheckbox = document.getElementById("exclusiveRarityEncounterFiltering");
 
 let pokedexStatus = {};
 const TextHighlightColor = '#9ae6b4';
@@ -130,7 +131,8 @@ const displayPokemon = () => {
         typeFilter: filterEncounterTypeElement.value,
         caughtFilter: filterCaughtElement.value,
         canBeCaughtFilter: filterCanBeCaughtElement.value,
-        caughtDateFilter: filterCaughtDateElement.value
+        caughtDateFilter: filterCaughtDateElement.value,
+        exclusiveFilter: exclusiveRarityEncounterFilteringCheckbox.checked
     };
     const filteredPokemon = getFilteredPokemon(filterOptions, pokedexStatus);
 
@@ -761,11 +763,13 @@ const populateFilters = () => {
         filterEncounterTypeElement.appendChild(option);
     });
 
-    const customRarities = ["Pheno Exclusive", "Dex Required", "Legends"];
+    const customRarities = ["Pheno Exclusive", "Safari Exclusive", "Time Exclusive", "Dex Required", "Legends"];
     function getRarityColorForCaughtFilter(rarity) {
         const triggerMap = {
             "Pheno Exclusive": "special",
-            "Dex Required": "lure"
+            "Dex Required": "lure",
+            "Safari Exclusive": "very rare",
+            "Time Exclusive": "uncommon"
         };
         
         const triggerType = triggerMap[rarity];
@@ -914,6 +918,10 @@ const setupEventListeners = () => {
     displayMoreInfoSwitch.addEventListener('change', () => {
         localStorage.setItem('displayMoreInfo', displayMoreInfoSwitch.checked);
     });
+    exclusiveRarityEncounterFilteringCheckbox.addEventListener('change', () => {
+        localStorage.setItem('exclusiveRarityEncounterFiltering', exclusiveRarityEncounterFilteringCheckbox.checked);
+        displayPokemon();
+    });
 
     excludeSafariCheckbox.addEventListener('change', filterDisplayedCatchingSpots);
     prioritizeTimeExclusiveCheckbox.addEventListener('change', sortDisplayedCatchingSpots);
@@ -997,6 +1005,13 @@ async function initializeApp() {
             displayMoreInfoSwitch.checked = JSON.parse(savedDisplayMoreInfo);
         } else {
             displayMoreInfoSwitch.checked = true; // Default to No
+        }
+
+        const savedExclusiveRarityEncounterFiltering = localStorage.getItem('exclusiveRarityEncounterFiltering');
+        if (savedExclusiveRarityEncounterFiltering !== null) {
+            exclusiveRarityEncounterFilteringCheckbox.checked = JSON.parse(savedExclusiveRarityEncounterFiltering);
+        } else {
+            exclusiveRarityEncounterFilteringCheckbox.checked = true; // Default to checked
         }
 
         populateFilters();
