@@ -343,6 +343,20 @@ const createLocationPokemonEntry = (p, useCheapestMethod) => {
     loadPokemonSprite(sprite, p);
     spriteContainer.appendChild(sprite);
 
+    const evolutionLine = getEvolutionLine(p.id);
+    const uncaughtEvolutionPokemon = evolutionLine.filter(evoName => {
+        const evoPokemon = POKEMON.find(pk => pk.name === evoName);
+        return evoPokemon && !pokedexStatus[evoPokemon.id]?.caught;
+    });
+
+    if (evolutionLine.length > 1 && uncaughtEvolutionPokemon.length > 1) {
+        const catchAllButton = document.createElement('button');
+        catchAllButton.className = 'control-button catch-all-evolution-button';
+        catchAllButton.textContent = 'Catch All';
+        catchAllButton.dataset.pokemonId = p.id;
+        spriteContainer.appendChild(catchAllButton);
+    }
+
     const timeExclusivities = [...new Set(p.encounters.map(e => e.timeExclusivity).filter(Boolean))];
 
     if (timeExclusivities.length > 0) {
@@ -744,6 +758,32 @@ const setupEventListeners = () => {
             e.stopPropagation();
             return;
         }
+
+        const catchAllButton = e.target.closest('.catch-all-evolution-button');
+        if (catchAllButton) {
+            const pokemonId = parseInt(catchAllButton.dataset.pokemonId);
+            const evolutionLineNames = getEvolutionLine(pokemonId);
+            const uncaughtEvolutionPokemon = evolutionLineNames.map(name => POKEMON.find(p => p.name === name)).filter(p => p && !pokedexStatus[p.id]?.caught);
+
+            if (uncaughtEvolutionPokemon.length > 0) {
+                const pokemonNamesToCatch = uncaughtEvolutionPokemon.map(p => `<span style="color: #FFD700;">${p.name}</span>`).join(', ');
+                const message = `The Pokémon; ${pokemonNamesToCatch}, will be marked as caught!`;
+                createMessageBox("info", "WARNING", `${message}`, true, async () => {
+                    const now = new Date().toISOString();
+                    uncaughtEvolutionPokemon.forEach(p => {
+                        pokedexStatus[p.id] = { id: p.id, name: p.name, caught: true, timestamp: now };
+                    });
+                    saveProfileData('pokedexStatus', pokedexStatus);
+                    await updateEvolutionNotesInCache(pokemonId);
+                    displayPokemon();
+                    findBestCatchingSpots();
+                });
+            } else {
+                createMessageBox("info", "INFO", "All Pokémon in this evolution line are already caught!", false);
+            }
+            return;
+        }
+
         handleBestSpotsSpriteClick(e);
     });
 
@@ -897,7 +937,7 @@ let lastKnownIngamePeriod = localStorage.getItem('lastKnownIngamePeriod');
 const checkIngameTimeChange = () => {
     const { period: currentIngamePeriod } = getCurrentIngameTime();
     if (lastKnownIngamePeriod && lastKnownIngamePeriod !== currentIngamePeriod) {
-        createMessageBox('info', 'The in-game daytime has changed. Refreshing the best catching spots list...');
+        createMessageBox('info', null, 'The in-game daytime has changed. Refreshing the best catching spots list...');
         findBestCatchingSpots();
     }
     localStorage.setItem('lastKnownIngamePeriod', currentIngamePeriod);

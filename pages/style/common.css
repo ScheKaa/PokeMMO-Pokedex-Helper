@@ -65,39 +65,83 @@ button:hover {
   background-color: var(--button-bg-hover);
 }
 
+.button-style-match {
+  border-radius: 8px;
+  margin-bottom: 5px;
+}
+
 .message-box {
   position: fixed;
-  top: 20px;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
   z-index: 2000;
   opacity: 0;
   transition: opacity 0.3s ease-in-out;
+  width: 90%;
+  max-width: 400px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px var(--shadow-color);
+  box-sizing: border-box;
+  background-color: var(--primary-bg);
+  border: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
 }
 
-.message-box.success {
-  background-color: var(--message-box-success-bg);
+.message-box-header {
+  background-color: var(--header-bg);
+  color: var(--header-text);
+  padding: 15px 20px;
+  border-bottom: 1px solid var(--border-color);
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  display: grid;
+  grid-template-columns: 80% 20%;
+  align-items: center;
+  text-align: center;
+  width: 100%; 
+  box-sizing: border-box; 
 }
 
-.message-box.error {
-  background-color: var(--message-box-error-bg);
+.message-box-header h3 {
+  margin: 0;
+  font-size: 1.4em;
+  font-weight: bold;
+  text-align: center;
 }
 
-.message-box.info {
-  background-color: var(--message-box-info-bg);
+.close-message-box {
+  background: none;
+  border: none;
+  color: var(--header-text);
+  font-size: 2em;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0;
+}
+
+.close-message-box:hover {
+  color: var(--button-bg);
 }
 
 .message-box-content {
-  padding: 15px 30px;
-  border-radius: 8px;
-  color: white;
+  color: var(--text-color);
   font-weight: bold;
-  box-shadow: 0 4px 10px var(--shadow-color);
-  max-width: 24rem;
   width: 100%;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
+  text-align: center;
+  padding: 20px;
+  gap: 15px;
+  box-sizing: border-box;
+  background-color: var(--secondary-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  margin-top: 10px;
 }
 
 :root {
@@ -247,6 +291,6 @@ body.dark-mode {
   --switch-bg-on: #63b3ed;
   --switch-bg-off: #718096;
   --uncatchable-message-color: #fc8181;
-  --instructions-color: #68d391; /* Green for dark mode */
-  --instructions-strong-color: #9ae6b4; /* Lighter green for strong tags in dark mode */
+  --instructions-color: #68d391;
+  --instructions-strong-color: #9ae6b4;
 }

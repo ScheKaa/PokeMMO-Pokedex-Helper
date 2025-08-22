@@ -435,6 +435,12 @@ details > summary.location-header:hover {
   transform: translateY(-1px);
 }
 
+.catch-all-evolution-button {
+  margin-top: 5px;
+  padding: 4px 6px;
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
 .pokemon-timestamp {
   margin-top: 2px;
   font-size: 0.7rem;

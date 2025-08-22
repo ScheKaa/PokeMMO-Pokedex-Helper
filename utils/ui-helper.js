@@ -20,7 +20,7 @@ export function displayMessageBox(message, type) {
     }, 3000);
 }
 
-export function createMessageBox(type, message, isConfirmation = false, onConfirm = null) {
+export function createMessageBox(type, title, message, isConfirmation = false, onConfirm = null) {
     const messageBox = document.createElement('div');
     let messageBoxClasses = 'message-box ';
 
@@ -44,21 +44,22 @@ export function createMessageBox(type, message, isConfirmation = false, onConfir
         messageBox.classList.add('info');
     }
 
-    contentWrapper.innerHTML = `
-        <span>${message}</span>
-        <button class="ml-4 text-white opacity-75 hover:opacity-100 close-message-box">
-            <i class="fas fa-times"></i>
-        </button>
-    `;
+    if (title) {
+        const headerDiv = document.createElement('div');
+        headerDiv.className = 'message-box-header';
+        headerDiv.innerHTML = `<h3 class="text-lg font-bold mb-2">${title}</h3>`;
+        messageBox.appendChild(headerDiv);
+    }
+    contentWrapper.innerHTML = `<span>${message}</span>`;
     messageBox.appendChild(contentWrapper);
 
     if (isConfirmation) {
         const buttonContainer = document.createElement('div');
-        buttonContainer.className = 'mt-3 flex justify-end space-x-2';
+        buttonContainer.className = 'mt-3 flex justify-center space-x-2 w-full';
 
         const yesButton = document.createElement('button');
         yesButton.textContent = 'Yes';
-        yesButton.className = 'px-4 py-2 bg-white text-blue-700 rounded-md hover:bg-gray-100';
+        yesButton.className = 'px-4 py-2 bg-white text-blue-700 rounded-md hover:bg-gray-100 mr-2 button-style-match'; // Added button-style-match
         yesButton.onclick = () => {
             if (onConfirm) onConfirm();
             messageBox.remove();
@@ -66,7 +67,7 @@ export function createMessageBox(type, message, isConfirmation = false, onConfir
 
         const noButton = document.createElement('button');
         noButton.textContent = 'No';
-        noButton.className = 'px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400';
+        noButton.className = 'px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 button-style-match'; // Added button-style-match
         noButton.onclick = () => messageBox.remove();
 
         buttonContainer.appendChild(yesButton);
@@ -74,7 +75,20 @@ export function createMessageBox(type, message, isConfirmation = false, onConfir
         contentWrapper.appendChild(buttonContainer);
     }
 
-    document.body.appendChild(messageBox); 
+    if (isConfirmation || title) {
+        const closeButton = document.createElement('button');
+        closeButton.className = 'close-message-box';
+        closeButton.innerHTML = '<i class="fas fa-times"></i>';
+        closeButton.onclick = () => messageBox.remove();
+
+        if (title) {
+            messageBox.querySelector('.message-box-header').appendChild(closeButton);
+        } else {
+            messageBox.appendChild(closeButton);
+        }
+    }
+
+    document.body.appendChild(messageBox);
 
     setTimeout(() => {
         messageBox.style.opacity = '1';
@@ -95,10 +109,6 @@ export function createMessageBox(type, message, isConfirmation = false, onConfir
             }, { once: true });
         }, { once: true });
     }
-
-    messageBox.querySelector('.close-message-box').onclick = () => {
-        messageBox.remove();
-    };
 }
 
 export function showModal(modalElement) {
