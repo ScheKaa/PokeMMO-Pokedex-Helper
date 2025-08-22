@@ -436,7 +436,8 @@ details > summary.location-header:hover {
   transform: translateY(-1px);
 }
 
-.catch-all-evolution-button {
+.catch-all-evolution-button,
+.evo-button {
   margin-top: 5px;
   padding: 4px 6px;
   font-size: 0.7rem;

@@ -20,7 +20,7 @@ export function displayMessageBox(message, type) {
     }, 3000);
 }
 
-export function createMessageBox(type, title, message, isConfirmation = false, onConfirm = null) {
+export function createMessageBox(type, title, message, isConfirmation = false, onConfirm = null, noTimeout = false) {
     const messageBox = document.createElement('div');
     let messageBoxClasses = 'message-box ';
 
@@ -94,7 +94,7 @@ export function createMessageBox(type, title, message, isConfirmation = false, o
         messageBox.style.opacity = '1';
     }, 10);
 
-    if (!isConfirmation) {
+    if (!isConfirmation && !noTimeout) {
         setTimeout(() => {
             messageBox.style.opacity = '0';
             messageBox.addEventListener('transitionend', () => {

@@ -1,5 +1,5 @@
-import { POKEMON } from './pokemon.js';
-import { getEvolutionLine } from './dex-helper-utils.js';
+import { POKEMON, EVOLUTION_TYPES } from './pokemon.js';
+import { getEvolutionLine, getEvolutionLineDetails } from './dex-helper-utils.js';
 import { isPokemonSafariExclusiveOnly} from './filter-helper.js';
 
 const generateEvolutionNotes = (pokemonId, pokedexStatus) => {
@@ -7,7 +7,10 @@ const generateEvolutionNotes = (pokemonId, pokedexStatus) => {
     const lureOnlyNames = [];
     const safariOnlyNames = [];
     const specialOnlyNames = [];
+    let hasUnknownEvolutionType = false;
+    let uncaughtEvolutionCount = 0;
     const evolutionLineNames = getEvolutionLine(pokemonId);
+    const evolutionLineDetails = getEvolutionLineDetails(pokemonId);
     const originalPokemon = POKEMON.find(p => p.id === pokemonId);
 
     if (!originalPokemon) {
@@ -22,7 +25,9 @@ const generateEvolutionNotes = (pokemonId, pokedexStatus) => {
         if (evoPokemonObj) {
             const isCaught = pokedexStatus[evoPokemonObj.id]?.caught;
             
-            if (isCaught) {
+            if (!isCaught) { 
+                uncaughtEvolutionCount++;
+            } else {
                 continue;
             }
             
@@ -42,6 +47,19 @@ const generateEvolutionNotes = (pokemonId, pokedexStatus) => {
                 lureOnlyNames.push(evoPokemonObj.name);
             } else if (hasSpecialOnlyLocation && evoPokemonObj.id !== pokemonId) {
                 specialOnlyNames.push(evoPokemonObj.name);
+            }
+
+            // Check for special evolutions
+            for (const detail of evolutionLineDetails) {
+                if (detail.id === evoPokemonObj.id && detail.evolutions) {
+                    for (const evo of detail.evolutions) {
+                        if (evo.type && !Object.values(EVOLUTION_TYPES).includes(evo.type)) {
+                            hasUnknownEvolutionType = true;
+                            break;
+                        }
+                    }
+                }
+                if (hasUnknownEvolutionType) break;
             }
 
             // Check for Safari Exclusive with non-Safari evolutions
@@ -69,6 +87,9 @@ const generateEvolutionNotes = (pokemonId, pokedexStatus) => {
     }
     if (safariOnlyNames.length > 0) {
         messages.push({ text: `Note: <span class="pokemon-note-name-highlight">${safariOnlyNames.join(', ')}</span> is Safari-only.`, type: 'safari-only' });
+    }
+    if (hasUnknownEvolutionType && uncaughtEvolutionCount >= 2) { // Only display if at least 2 Pokémon in the evolution line are uncaught
+        messages.push({ text: `Note: Click on <span class="pokemon-note-item safari-only">Evo</span> for evolution details`, type: 'evolution-details' });
     }
     // console.log(`generateEvolutionNotes: Generated messages for ${originalPokemon.name}:`, messages);
     return messages;

@@ -46,7 +46,7 @@ export const TYPES = {
     "DARK": { label: "Dark", color: "#707070" },
 };
 
-const EVOLUTION_TYPES = {
+export const EVOLUTION_TYPES = {
     ITEM: 'ITEM',
     LEVEL: 'LEVEL',
 };

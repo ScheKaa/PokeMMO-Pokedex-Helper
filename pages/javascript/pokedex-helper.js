@@ -6,7 +6,7 @@ import {
 } from "../../utils/location.js";
 import { exportPokedexData, importPokedexData } from "../../utils/import-export.js";
 import { getBestCatchingProbabilities, getTop4CostEfficientBalls, getFastestCatchEstimates } from "../../utils/bestCatcher.js";
-import { getCurrentIngameTime, getRarityColor, getCurrentSeason, getSeasonName, getTimeUntilNextPeriod, getEvolutionLine, getUncaughtEvolutionLineCount } from '../../utils/dex-helper-utils.js';
+import { getCurrentIngameTime, getRarityColor, getCurrentSeason, getSeasonName, getTimeUntilNextPeriod, getEvolutionLine, getUncaughtEvolutionLineCount, getEvolutionLineDetails } from '../../utils/dex-helper-utils.js';
 import { getEvolutionMessages, getPokemonNotes } from '../../utils/note-helper.js';
 import { processChatLog, confirmAndAddCaughtPokemon } from '../../utils/chat-log-parser.js';
 import { initHamburgerMenu } from './hamburger-menu.js';
@@ -357,6 +357,12 @@ const createLocationPokemonEntry = (p, useCheapestMethod) => {
         catchAllButton.textContent = 'Catch All';
         catchAllButton.dataset.pokemonId = p.id;
         spriteContainer.appendChild(catchAllButton);
+
+        const evoButton = document.createElement('button');
+        evoButton.className = 'control-button evo-button';
+        evoButton.textContent = 'Evo';
+        evoButton.dataset.pokemonId = p.id;
+        spriteContainer.appendChild(evoButton);
     }
 
     const timeExclusivities = [...new Set(p.encounters.map(e => e.timeExclusivity).filter(Boolean))];
@@ -783,6 +789,60 @@ const setupEventListeners = () => {
             } else {
                 createMessageBox("info", "INFO", "All Pokémon in this evolution line are already caught!", false);
             }
+            return;
+        }
+
+        const evoButton = e.target.closest('.evo-button');
+        if (evoButton) {
+            const pokemonId = parseInt(evoButton.dataset.pokemonId);
+            const evolutionLine = getEvolutionLineDetails(pokemonId);
+
+            // Sort by order to display correctly
+            evolutionLine.sort((a, b) => a.order - b.order);
+
+            let message = `Evolution Line for <span style="color: #FFD700;">${POKEMON.find(p => p.id === pokemonId)?.name}</span>:<br><br>`;
+            const evolutionsByOrder = new Map();
+
+            evolutionLine.forEach(evo => {
+                if (!evolutionsByOrder.has(evo.order)) {
+                    evolutionsByOrder.set(evo.order, []);
+                }
+                evolutionsByOrder.get(evo.order).push(evo);
+            });
+
+            // Sort orders numerically
+            const sortedOrders = Array.from(evolutionsByOrder.keys()).sort((a, b) => a - b);
+
+            sortedOrders.forEach(order => {
+                const pokemonAtOrder = evolutionsByOrder.get(order);
+                const pokemonNames = pokemonAtOrder.map(p => `<span style="color: #FFD700;">${p.name}</span>`).join(', ');
+                message += `${pokemonNames} (Order: ${order})`;
+
+                pokemonAtOrder.forEach(evo => {
+                    if (evo.evolutions && evo.evolutions.length > 0) {
+                        evo.evolutions.forEach(nextEvo => {
+                            let evolutionMethod = '';
+                            if (nextEvo.type) {
+                                evolutionMethod += `Type: ${nextEvo.type}`;
+                                if (nextEvo.item_name) {
+                                    evolutionMethod += `, Item: ${nextEvo.item_name}`;
+                                }
+                                if (nextEvo.type === 'LEVEL' && nextEvo.val) {
+                                    evolutionMethod += `, Level: ${nextEvo.val}`;
+                                }
+                            }
+                            if (evolutionMethod) {
+                                message += `<br>&nbsp;&nbsp;&nbsp;&nbsp;→ <span style="color: #9ae6b4;">${nextEvo.name}</span> (${evolutionMethod})`;
+                            } else {
+                                message += `<br>&nbsp;&nbsp;&nbsp;&nbsp;→ <span style="color: #9ae6b4;">${nextEvo.name}</span>`;
+                            }
+                        });
+                    }
+                });
+                message += `<br>`;
+            });
+
+            createMessageBox("info", "Evolution Line", message, false, null, true);
             return;
         }
 
