@@ -6,7 +6,7 @@ import {
 } from "../../utils/location.js";
 import { exportPokedexData, importPokedexData } from "../../utils/import-export.js";
 import { getBestCatchingProbabilities, getTop4CostEfficientBalls, getFastestCatchEstimates } from "../../utils/bestCatcher.js";
-import { filterLocationsByTimeAndSeason, getCurrentIngameTime, getRarityColor, getCurrentSeason, getSeasonName, getTimeUntilNextPeriod, getEvolutionLine } from '../../utils/dex-helper-utils.js';
+import { getCurrentIngameTime, getRarityColor, getCurrentSeason, getSeasonName, getTimeUntilNextPeriod, getEvolutionLine, getUncaughtEvolutionLineCount } from '../../utils/dex-helper-utils.js';
 import { getEvolutionMessages, getPokemonNotes } from '../../utils/note-helper.js';
 import { processChatLog, confirmAndAddCaughtPokemon } from '../../utils/chat-log-parser.js';
 import { initHamburgerMenu } from './hamburger-menu.js';
@@ -344,12 +344,14 @@ const createLocationPokemonEntry = (p, useCheapestMethod) => {
     spriteContainer.appendChild(sprite);
 
     const evolutionLine = getEvolutionLine(p.id);
-    const uncaughtEvolutionPokemon = evolutionLine.filter(evoName => {
-        const evoPokemon = POKEMON.find(pk => pk.name === evoName);
-        return evoPokemon && !pokedexStatus[evoPokemon.id]?.caught;
-    });
+    const uncaughtEvolutionCount = getUncaughtEvolutionLineCount(p.id, pokedexStatus);
 
-    if (evolutionLine.length > 1 && uncaughtEvolutionPokemon.length > 1) {
+    if (uncaughtEvolutionCount > 1) {
+        const evolutionLineCountElement = document.createElement('p');
+        evolutionLineCountElement.className = 'pokemon-time-exclusivity';
+        evolutionLineCountElement.textContent = `(+${uncaughtEvolutionCount} Dex)`;
+        spriteContainer.appendChild(evolutionLineCountElement);
+
         const catchAllButton = document.createElement('button');
         catchAllButton.className = 'control-button catch-all-evolution-button';
         catchAllButton.textContent = 'Catch All';

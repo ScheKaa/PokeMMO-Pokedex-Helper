@@ -388,7 +388,8 @@ details > summary.location-header:hover {
 .pokemon-time-exclusivity {
   font-size: 0.75rem;
   color: var(--secondary-text-color);
-  margin-top: 5px;
+  margin-top: 0px;
+  margin-bottom: 0px;
   text-align: center;
 }
 

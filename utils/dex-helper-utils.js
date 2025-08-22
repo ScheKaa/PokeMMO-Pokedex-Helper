@@ -68,6 +68,87 @@ export function getEvolutionLine(pokemonId) {
     return evolutionLineNames;
 }
 
+export function getUncaughtEvolutionLineCount(pokemonId, pokedexStatus) {
+    const evolutionLineNames = getEvolutionLine(pokemonId);
+    const uncaughtEvolutionPokemon = evolutionLineNames.filter(evoName => {
+        const evoPokemon = POKEMON.find(pk => pk.name === evoName);
+        return evoPokemon && !pokedexStatus[evoPokemon.id]?.caught;
+    });
+    return uncaughtEvolutionPokemon.length;
+}
+
+const evolutionOrderCache = new Map();
+
+/**
+ * @param {number} id The ID of the Pokémon.
+ * @returns {number} The evolutionary order of the Pokémon (0 for base form, 1 for first evolution, etc.).
+ */
+function getEvolutionOrder(id) {
+    // Check if the order is already in the cache to prevent redundant calculations.
+    if (evolutionOrderCache.has(id)) {
+        return evolutionOrderCache.get(id);
+    }
+    
+    const prevEvolution = POKEMON.find(p => p.evolutions?.some(e => e.id === id));
+    
+    // If no previous evolution is found, this is the base form (order 0).
+    if (!prevEvolution) {
+        evolutionOrderCache.set(id, 0);
+        return 0;
+    }
+    
+    const parentOrder = getEvolutionOrder(prevEvolution.id);
+    const order = parentOrder + 1;
+    
+    // Store the result in the cache before returning.
+    evolutionOrderCache.set(id, order);
+    return order;
+}
+
+/**
+ * @param {number} pokemonId The ID of the starting Pokémon.
+ * @returns {Array<Object>} An array of Pokémon objects belonging to the same evolution line,
+ * with only the 'id', 'name', 'evolutions', and 'order' properties.
+ */
+export function getEvolutionLineDetails(pokemonId) {
+    const visited = new Set();
+    const queue = [pokemonId];
+    const pokemonObjects = new Map();
+
+    while (queue.length > 0) {
+        const currentId = queue.shift();
+        if (visited.has(currentId)) continue;
+        
+        const species = POKEMON.find(p => p.id === currentId);
+        if (!species) continue;
+        
+        visited.add(currentId);
+
+        const order = getEvolutionOrder(currentId);
+        
+        const simplifiedSpecies = {
+            id: species.id,
+            name: species.name,
+            evolutions: species.evolutions,
+            order: order
+        };
+        
+        pokemonObjects.set(currentId, simplifiedSpecies);
+        const evolutionIds = [
+            ...(species.evolutions || []).map(e => e.id),
+            ...POKEMON
+                .filter(p => p.evolutions?.some(e => e.id === currentId))
+                .map(p => p.id)
+        ];
+        evolutionIds.forEach(id => {
+            if (!visited.has(id)) {
+                queue.push(id);
+            }
+        });
+    }
+    return [...pokemonObjects.values()];
+}
+
 export const isLegendaryPokemon = (pokemonId) => {
     if (NOT_LEGENDARY_IDS.includes(pokemonId)) {
         return false;

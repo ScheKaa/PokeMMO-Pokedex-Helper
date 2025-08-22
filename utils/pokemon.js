@@ -46,6 +46,10 @@ export const TYPES = {
     "DARK": { label: "Dark", color: "#707070" },
 };
 
+const EVOLUTION_TYPES = {
+    ITEM: 'ITEM',
+    LEVEL: 'LEVEL',
+};
 
 export const getType = id => TYPES[id];
 
