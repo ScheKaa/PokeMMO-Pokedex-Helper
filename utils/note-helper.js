@@ -6,6 +6,7 @@ const generateEvolutionNotes = (pokemonId, pokedexStatus) => {
     const uncatchableNames = [];
     const lureOnlyNames = [];
     const safariOnlyNames = [];
+    const specialOnlyNames = [];
     const evolutionLineNames = getEvolutionLine(pokemonId);
     const originalPokemon = POKEMON.find(p => p.id === pokemonId);
 
@@ -27,13 +28,20 @@ const generateEvolutionNotes = (pokemonId, pokedexStatus) => {
             
             const locations = evoPokemonObj.locations || [];
             const hasCatchableLocation = locations.some(loc => loc.rarity !== 'Uncatchable' && loc.rarity !== 'Unobtainable');
-            const hasLureOnlyLocation = locations.every(loc => loc.rarity === 'Lure' || loc.rarity === 'Special');
+            const hasLureOnlyLocation = locations.every(loc => loc.rarity === 'Lure') || (
+                locations.every(loc => loc.rarity === 'Lure' || loc.rarity === 'Special') &&
+                locations.some(loc => loc.rarity === 'Lure') &&
+                locations.some(loc => loc.rarity === 'Special')
+            );
+            const hasSpecialOnlyLocation = locations.every(loc => loc.rarity === 'Special')
             
             if (!hasCatchableLocation) {
                 uncatchableNames.push(evoPokemonObj.name);
             } else if (hasLureOnlyLocation && evoPokemonObj.id !== pokemonId) {
                 //Exclude the original Pokémon from the lure-only note.
                 lureOnlyNames.push(evoPokemonObj.name);
+            } else if (hasSpecialOnlyLocation && evoPokemonObj.id !== pokemonId) {
+                specialOnlyNames.push(evoPokemonObj.name);
             }
 
             // Check for Safari Exclusive with non-Safari evolutions
@@ -55,6 +63,9 @@ const generateEvolutionNotes = (pokemonId, pokedexStatus) => {
     }
     if (lureOnlyNames.length > 0) {
         messages.push({ text: `Note: <span class="pokemon-note-name-highlight">${lureOnlyNames.join(', ')}</span> is Lure-only. Consider keeping for evolving/breeding.`, type: 'lure-only' });
+    }
+    if (specialOnlyNames.length > 0) {
+        messages.push({ text: `Note: <span class="pokemon-note-name-highlight">${specialOnlyNames.join(', ')}</span> is Special-only. Consider keeping for evolving/breeding.`, type: 'special-only' });
     }
     if (safariOnlyNames.length > 0) {
         messages.push({ text: `Note: <span class="pokemon-note-name-highlight">${safariOnlyNames.join(', ')}</span> is Safari-only.`, type: 'safari-only' });

@@ -59,9 +59,13 @@ export function getEvolutionLine(pokemonId) {
         ].forEach(id => !visited.has(id) && queue.push(id));
     }
 
-return [...new Set([...visited].map(id => 
-    POKEMON.find(p => p.id === id)?.name
+    const evolutionLineNames = [...new Set([...visited].map(id => 
+        POKEMON.find(p => p.id === id)?.name
     ).filter(Boolean))];
+    // returns: Evolution line for Pokemon ID 634: (3) ['Zweilous', 'Hydreigon', 'Deino']
+    // console.log(`Evolution line for Pokemon ID ${pokemonId}:`, evolutionLineNames);
+
+    return evolutionLineNames;
 }
 
 export const isLegendaryPokemon = (pokemonId) => {

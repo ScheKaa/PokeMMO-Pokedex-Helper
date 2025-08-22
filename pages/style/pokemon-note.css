@@ -113,7 +113,9 @@
 .pokemon-note-item.lure-only {
     color: #add8e6;
 }
-
+.pokemon-note-item.special-only {
+    color: #ff8c00;
+}
 .pokemon-note-item.safari-only {
     color: #90ee90;
 }

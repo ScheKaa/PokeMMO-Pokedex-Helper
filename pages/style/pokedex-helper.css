@@ -259,6 +259,10 @@ details > summary.location-header {
   transition: background-color 0.3s ease;
 }
 
+details > summary.location-header .location-key-text {
+  color: #FFD700;
+}
+
 details > summary.location-header:hover {
   background-color: var(--hamburger-menu-hover-bg);
 }
@@ -772,4 +776,8 @@ input:checked + .slider:before {
 
 .footer-container a:hover {
   text-decoration: underline;
+}
+
+.sort-dropdown-container {
+  margin-bottom: 15px;
 }
