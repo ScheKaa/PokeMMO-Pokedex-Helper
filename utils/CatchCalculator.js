@@ -67,7 +67,7 @@ export const calculatePokemonCatchProbability = (pokemonData, hpPercent, ballNam
     // to reduce calculations, might change that in the future
     const max_hp = 100; 
     if (pkmnRate !== null) {
-        const current_hp = 1;
+        const current_hp = (max_hp * hpPercent) / 100;
 
         const result = calculateCatchRate(
             pkmnRate,

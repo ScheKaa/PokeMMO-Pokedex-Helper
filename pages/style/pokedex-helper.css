@@ -229,6 +229,11 @@ header h1 {
   border-color: var(--delete-button-bg);
 }
 
+.pokemon-sprite.noted-evolution-line {
+  filter: grayscale(0%);
+  border-color: orange;
+}
+
 .pokemon-id {
   margin-top: 2px;
   margin-bottom: 0;
@@ -437,7 +442,8 @@ details > summary.location-header:hover {
 }
 
 .catch-all-evolution-button,
-.evo-button {
+.evo-button,
+.note-line-evolution-button {
   margin-top: 5px;
   padding: 4px 6px;
   font-size: 0.7rem;

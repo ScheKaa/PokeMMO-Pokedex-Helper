@@ -79,6 +79,8 @@ const matchesCaughtStatus = (p, specialFilter, dexStatusFilter, pokedexStatus) =
         dexStatusMatch = pokedexStatus[p.id]?.caught === true;
     } else if (dexStatusFilter === "false") {
         dexStatusMatch = pokedexStatus[p.id]?.caught === false;
+    } else if (dexStatusFilter === "notedEvolutionLine") {
+        dexStatusMatch = pokedexStatus[p.id]?.evolution_note !== null;
     }
 
     let customFilterMatch = true;

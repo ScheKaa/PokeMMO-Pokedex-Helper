@@ -79,6 +79,9 @@ const createPokemonEntry = (p, regionFilter) => {
     const sprite = document.createElement("img");
     sprite.className = "pokemon-sprite";
     sprite.classList.add(pokedexStatus[p.id]?.caught ? "caught" : "not-caught");
+    if (pokedexStatus[p.id]?.evolution_note !== null) {
+        sprite.classList.add("noted-evolution-line");
+    }
     sprite.setAttribute('title', p.name);
     loadPokemonSprite(sprite, p);
 
@@ -340,12 +343,15 @@ const createLocationPokemonEntry = (p, useCheapestMethod) => {
     const sprite = document.createElement("img");
     sprite.className = "pokemon-sprite small";
     sprite.classList.add(pokedexStatus[p.id]?.caught ? "caught" : "not-caught");
+    if (pokedexStatus[p.id]?.evolution_note !== null) {
+        sprite.classList.add("noted-evolution-line");
+    }
     sprite.setAttribute('title', p.name);
     sprite.dataset.id = p.id;
     loadPokemonSprite(sprite, p);
     spriteContainer.appendChild(sprite);
 
-    const evolutionLine = getEvolutionLine(p.id);
+    //const evolutionLine = getEvolutionLine(p.id);
     const uncaughtEvolutionCount = getUncaughtEvolutionLineCount(p.id, pokedexStatus);
 
     if (uncaughtEvolutionCount > 1) {
@@ -365,6 +371,12 @@ const createLocationPokemonEntry = (p, useCheapestMethod) => {
         evoButton.textContent = 'Evo';
         evoButton.dataset.pokemonId = p.id;
         spriteContainer.appendChild(evoButton);
+
+        const noteLineButton = document.createElement('button');
+        noteLineButton.className = 'control-button note-line-evolution-button';
+        noteLineButton.textContent = 'Note';
+        noteLineButton.dataset.pokemonId = p.id;
+        spriteContainer.appendChild(noteLineButton);
     }
 
     const timeExclusivities = [...new Set(p.encounters.map(e => e.timeExclusivity).filter(Boolean))];
@@ -464,21 +476,25 @@ const findBestCatchingSpots = () => {
     };
     const locations = groupPokemonByLocation(groupConfig);
     const currentRegionFilter = filterRegionElement.value;
-    const uncaughtPokemonIds = new Set(Object.keys(pokedexStatus).filter(id => !pokedexStatus[id].caught).map(id => parseInt(id, 10)));
+    // Filter out caught and noted Pokémon for calculation purposes
+    const trulyUncaughtPokemonIds = new Set(Object.keys(pokedexStatus).filter(id => !pokedexStatus[id].caught && pokedexStatus[id].evolution_note === null).map(id => parseInt(id, 10)));
 
     const relevantLocations = [];
     locations.forEach((locationData, locationKey) => {
         const pokemonMap = locationData.pokemonMap;
-        const uncaughtHere = Array.from(pokemonMap.values()).filter(p => uncaughtPokemonIds.has(p.id));
+        // Filter for display: show all uncaught, including noted ones
+        const uncaughtHereForDisplay = Array.from(pokemonMap.values()).filter(p => !pokedexStatus[p.id]?.caught);
+        // Filter for calculations: only truly uncaught (not caught and not noted)
+        const trulyUncaughtHereForCalc = Array.from(pokemonMap.values()).filter(p => trulyUncaughtPokemonIds.has(p.id));
 
-        if (uncaughtHere.length > 0) {
-            const catchableCount = new Set(uncaughtHere.map(p => p.id)).size;
+        if (uncaughtHereForDisplay.length > 0) {
+            const catchableCount = new Set(trulyUncaughtHereForCalc.map(p => p.id)).size;
 
             let evolutionLineCount = 0;
             const countedEvolutionLines = new Set();
             const allUncaughtPokemonInRelevantLines = new Set();
 
-            uncaughtHere.forEach(p => {
+            trulyUncaughtHereForCalc.forEach(p => {
                 const evolutionLineNames = getEvolutionLine(p.id);
                 const evolutionLineKey = evolutionLineNames.sort().join('-');
 
@@ -488,7 +504,7 @@ const findBestCatchingSpots = () => {
 
                     evolutionLineNames.forEach(evoName => {
                         const evoPokemon = POKEMON.find(pk => pk.name === evoName);
-                        if (evoPokemon && !pokedexStatus[evoPokemon.id]?.caught) {
+                        if (evoPokemon && !pokedexStatus[evoPokemon.id]?.caught && pokedexStatus[evoPokemon.id]?.evolution_note === null) {
                             allUncaughtPokemonInRelevantLines.add(evoPokemon.id);
                         }
                     });
@@ -498,7 +514,7 @@ const findBestCatchingSpots = () => {
 
             relevantLocations.push({
                 locationKey: locationKey,
-                pokemonList: uncaughtHere,
+                pokemonList: uncaughtHereForDisplay,
                 evolutionLineCount: evolutionLineCount,
                 catchableCount: catchableCount,
                 totalUncaughtInEvolutionLines: totalUncaughtInEvolutionLines,
@@ -618,13 +634,16 @@ const handleBestSpotsSpriteClick = (e) => {
 
     if (pokedexStatus[pokemonId].caught) {
         pokedexStatus[pokemonId].timestamp = new Date().toISOString();
+        pokedexStatus[pokemonId].evolution_note = null;
     } else {
         pokedexStatus[pokemonId].timestamp = null;
+        pokedexStatus[pokemonId].evolution_note = null;
     }
 
     saveProfileData('pokedexStatus', pokedexStatus);
     clickedSprite.classList.toggle('caught');
     clickedSprite.classList.toggle('not-caught');
+    clickedSprite.classList.remove('noted-evolution-line');
 
     document.querySelectorAll(`.location-pokemon-entry .pokemon-sprite[data-id="${pokemonId}"]`).forEach(sprite => {
         if (pokedexStatus[pokemonId].caught) {
@@ -722,18 +741,40 @@ const setupEventListeners = () => {
             const sprite = entry.querySelector(".pokemon-sprite");
             await showPokemonNotesPopup(pokemonId, sprite);
         } else {
+            // Left-click behavior: toggle caught status and clear note
             const isCaught = pokedexStatus[pokemonId].caught;
             pokedexStatus[pokemonId].caught = !isCaught;
 
             if (pokedexStatus[pokemonId].caught) {
                 pokedexStatus[pokemonId].timestamp = new Date().toISOString();
+                pokedexStatus[pokemonId].evolution_note = null; // Clear note when caught
             } else {
                 pokedexStatus[pokemonId].timestamp = null;
+                pokedexStatus[pokemonId].evolution_note = null; // Clear note when uncaught
             }
             saveProfileData('pokedexStatus', pokedexStatus);
             await updateEvolutionNotesInCache(pokemonId);
             displayPokemon(); 
         }
+    });
+
+    pokedexGrid.addEventListener("contextmenu", async (e) => {
+        const entry = e.target.closest(".pokemon-entry");
+        if (!entry) return;
+
+        const pokemonId = entry.dataset.id;
+        if (!pokemonId) return;
+
+        e.preventDefault();
+
+        // Right-click behavior: mark as uncaught and remove note
+        pokedexStatus[pokemonId].caught = false;
+        pokedexStatus[pokemonId].timestamp = null;
+        pokedexStatus[pokemonId].evolution_note = null;
+
+        saveProfileData('pokedexStatus', pokedexStatus);
+        await updateEvolutionNotesInCache(pokemonId);
+        displayPokemon();
     });
 
     bestCatchingSpotsContainer.addEventListener('click', (e) => {
@@ -818,6 +859,41 @@ const setupEventListeners = () => {
             });
 
             createMessageBox("info", "Evolution Line", message, false, null, true);
+            return;
+        }
+
+        const noteLineButton = e.target.closest('.note-line-evolution-button');
+        if (noteLineButton) {
+            const pokemonId = parseInt(noteLineButton.dataset.pokemonId);
+            const clickedPokemon = POKEMON.find(p => p.id === pokemonId);
+            const evolutionLineNames = getEvolutionLine(pokemonId);
+            const evolutionLinePokemon = evolutionLineNames.map(name => POKEMON.find(p => p.name === name)).filter(Boolean);
+
+            // Filter to only include uncaught Pokémon for noting
+            const uncaughtPokemonToNote = evolutionLinePokemon.filter(p => p.id !== pokemonId && !pokedexStatus[p.id]?.caught);
+            const pokemonNamesToNote = uncaughtPokemonToNote.map(p => `<span style="color: #FFD700;">${p.name}</span>`).join(', ');
+
+            let message;
+            if (uncaughtPokemonToNote.length > 0) {
+                message = `You're marking Pokémon <span style="color: #FFD700;">${clickedPokemon.name}</span> as caught and adding a note for uncaught Pokémon: ${pokemonNamesToNote}. Caught Pokémon will still appear in lists but won't be included in calculations. Right-click to uncatch, left-click to catch.`;
+            } else {
+                message = `Mark Pokémon <span style="color: #FFD700;">${clickedPokemon.name}</span> as Caught. All other Pokémon in its evolution line are already caught.`;
+            }
+            
+            createMessageBox("info", "WARNING", message, true, async () => {
+                const now = new Date().toISOString();
+
+                // Mark the clicked Pokémon as caught and clear its evolution_note
+                pokedexStatus[pokemonId] = { ...pokedexStatus[pokemonId], caught: true, timestamp: now, evolution_note: null };
+                uncaughtPokemonToNote.forEach(p => {
+                    pokedexStatus[p.id] = { ...pokedexStatus[p.id], evolution_note: clickedPokemon.name };
+                });
+
+                saveProfileData('pokedexStatus', pokedexStatus);
+                await updateEvolutionNotesInCache(pokemonId);
+                displayPokemon();
+                findBestCatchingSpots();
+            });
             return;
         }
 
@@ -1135,8 +1211,11 @@ function updatePokedexStatus(existingStatus) {
     POKEMON.forEach((p) => {
         if (existingStatus && existingStatus[p.id]) {
             updatedStatus[p.id] = existingStatus[p.id];
+            if (updatedStatus[p.id].evolution_note === undefined) {
+                updatedStatus[p.id].evolution_note = null;
+            }
         } else {
-            updatedStatus[p.id] = { id: p.id, name: p.name, caught: false, timestamp: null };
+            updatedStatus[p.id] = { id: p.id, name: p.name, caught: false, timestamp: null, evolution_note: null };
         }
     });
 

@@ -81,7 +81,7 @@
                     <ul>
                       <li>
                         Clicking on a Picture in Pokédex view or 'Best Catching Spots' marks a Pokémon as caught. By
-                        clicking on a caught Pokémon again, it gets 'released'.<br />
+                        clicking on a caught Pokémon again, it gets 'released'. Right click marks them as uncaught (Also removes noted (orange) Pokémon)<br />
                         That's important, the best catching spot only takes uncaught Pokémon into calculations, only
                         this way you get the optimal location. <br />Safari Zone works a bit differently
                         <strong>(not all Pokémon are available all the time)</strong>, so I would not recommend going
@@ -129,7 +129,7 @@
                         If you are not new and your Pokédex has a few hundred entries, consider filtering by:
                         <ul>
                           <li>'<strong>All Regions' -> 'Kanto'</strong> or any other Region</li>
-                          <li><strong>'All Pokémon' -> 'Caught'</strong> set it to caught to see how many you miss.</li>
+                          <li><strong>'Pokédex Status' -> 'Caught'</strong> set it to caught to see how many you miss.</li>
                         </ul>
                       </li>
                       <li>
@@ -138,7 +138,7 @@
                       </li>
                       <li>
                         <strong>
-                          After checking if you miss any at that Region change 'Caught' back to 'All Pokémon'. And
+                          After checking if you miss any at that Region change 'Caught' back to 'Pokédex'. And
                           Compare the in-game dex with this web page. <br />
                           This makes it easier to find the missing Pokémon to mark as caught.
                         </strong>
@@ -148,7 +148,7 @@
                   <li>
                     <strong>Import/Export:</strong>
                     <ul>
-                      <li>Imports and exports your Pokédex list, including all Pokémon and their All Pokémon.</li>
+                      <li>Imports and exports your Pokédex list, including their caught status and timestamp.</li>
                     </ul>
                   </li>
                   <li>
@@ -161,7 +161,7 @@
                       <li>
                         This function attempts to extract Pokédex entries and evolution messages. Breeding doesn't work,
                         it has no chat log. It also only works if your profile name on this page matches your in-game
-                        character name.
+                        character name, to prevent adding Pokémon from other Characters.
                       </li>
                       <li>
                         This feature is not fully tested; use with caution. After uploading, press F12 to open the
@@ -261,6 +261,7 @@
             <option value="">Pokédex Status</option>
             <option value="true"style="color: #9ae6b4;">Caught</option>
             <option value="false"style="color: red;">Uncaught</option>
+            <option value="notedEvolutionLine" style="color: #00BFFF;">Noted Pokémon</option>
           </select>
           <select id="filterCanBeCaught">
             <option value="">Pokémon Availability</option>

@@ -72,7 +72,8 @@ export function getUncaughtEvolutionLineCount(pokemonId, pokedexStatus) {
     const evolutionLineNames = getEvolutionLine(pokemonId);
     const uncaughtEvolutionPokemon = evolutionLineNames.filter(evoName => {
         const evoPokemon = POKEMON.find(pk => pk.name === evoName);
-        return evoPokemon && !pokedexStatus[evoPokemon.id]?.caught;
+        // Exclude Pokémon that are caught or have an evolution_note
+        return evoPokemon && !pokedexStatus[evoPokemon.id]?.caught && pokedexStatus[evoPokemon.id]?.evolution_note === null;
     });
     return uncaughtEvolutionPokemon.length;
 }
