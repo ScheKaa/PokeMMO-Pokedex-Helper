@@ -45,6 +45,7 @@ const ingameTimeElement = document.getElementById("ingameTime");
 const excludeSafariCheckbox = document.getElementById("excludeSafariCheckbox");
 const prioritizeTimeExclusiveCheckbox = document.getElementById("prioritizeTimeExclusiveCheckbox");
 const exclusiveRarityEncounterFilteringCheckbox = document.getElementById("exclusiveRarityEncounterFiltering");
+const hideNoteCheckbox = document.getElementById("hideNote");
 const sortCatchingSpotsDropdown = document.getElementById("sortCatchingSpotsDropdown");
 
 let pokedexStatus = {};
@@ -102,7 +103,7 @@ const createPokemonEntry = (p, regionFilter) => {
     pokemonNote.textContent = "Info";
     pokemonNote.dataset.pokemonId = p.id;
 
-    if (!pokemonNotesCache[p.id] || pokemonNotesCache[p.id].length === 0) {
+    if (!pokemonNotesCache[p.id] || pokemonNotesCache[p.id].length === 0 || hideNoteCheckbox.checked) {
         pokemonNote.style.display = "none";
     }
 
@@ -1029,6 +1030,11 @@ const setupEventListeners = () => {
         displayPokemon();
     });
 
+    hideNoteCheckbox.addEventListener('change', () => {
+        localStorage.setItem('hideNote', hideNoteCheckbox.checked);
+        displayPokemon();
+    });
+
     excludeSafariCheckbox.addEventListener('change', () => {
         const filterConfig = {
             bestCatchingSpotsContainer: bestCatchingSpotsContainer,
@@ -1264,6 +1270,13 @@ async function initializeApp() {
             exclusiveRarityEncounterFilteringCheckbox.checked = JSON.parse(savedExclusiveRarityEncounterFiltering);
         } else {
             exclusiveRarityEncounterFilteringCheckbox.checked = true; // Default to checked
+        }
+
+        const savedHideNote = localStorage.getItem('hideNote');
+        if (savedHideNote !== null) {
+            hideNoteCheckbox.checked = JSON.parse(savedHideNote);
+        } else {
+            hideNoteCheckbox.checked = false; // Default to unchecked
         }
 
         populateFilters();
