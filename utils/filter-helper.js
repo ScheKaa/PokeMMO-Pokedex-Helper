@@ -73,21 +73,30 @@ const isPhenoExclusivePokemon = (p) => {
     return allEvolutionsSpecialOnly;
 };
 
-const matchesCaughtStatus = (p, caughtFilter, pokedexStatus) => {
-    if (caughtFilter === "") {
-        return true;
-    } else if (caughtFilter === "Pheno Exclusive") {
-        return isPhenoExclusivePokemon(p);
-    } else if (caughtFilter === "Legends") {
-        return isLegendaryPokemon(p.id) || LEGEND_AND_REQUIRED_IDS.includes(p.id);
-    } else if (caughtFilter === "Dex Required") {
-        return !isLegendaryPokemon(p.id) || LEGEND_AND_REQUIRED_IDS.includes(p.id);
-    } else if (caughtFilter === "Safari Exclusive") {
-        return isPokemonSafariExclusiveOnly(p);
-    } else if (caughtFilter === "Time Exclusive") {
-        return isPokemonTimeExclusiveOnly(p);
+const matchesCaughtStatus = (p, specialFilter, dexStatusFilter, pokedexStatus) => {
+    let dexStatusMatch = true;
+    if (dexStatusFilter === "true") {
+        dexStatusMatch = pokedexStatus[p.id]?.caught === true;
+    } else if (dexStatusFilter === "false") {
+        dexStatusMatch = pokedexStatus[p.id]?.caught === false;
     }
-    return pokedexStatus[p.id]?.caught.toString() === caughtFilter;
+
+    let customFilterMatch = true;
+    if (specialFilter !== "") {
+        if (specialFilter === "Pheno Exclusive") {
+            customFilterMatch = isPhenoExclusivePokemon(p);
+        } else if (specialFilter === "Legends") {
+            customFilterMatch = isLegendaryPokemon(p.id) || LEGEND_AND_REQUIRED_IDS.includes(p.id);
+        } else if (specialFilter === "Dex Required") {
+            customFilterMatch = !isLegendaryPokemon(p.id) || LEGEND_AND_REQUIRED_IDS.includes(p.id);
+        } else if (specialFilter === "Safari Exclusive") {
+            customFilterMatch = isPokemonSafariExclusiveOnly(p);
+        } else if (specialFilter === "Time Exclusive") {
+            customFilterMatch = isPokemonTimeExclusiveOnly(p);
+        }
+    }
+
+    return dexStatusMatch && customFilterMatch;
 };
 
 const matchesCanBeCaughtStatus = (p, canBeCaughtFilter) => {
@@ -121,14 +130,14 @@ const matchesCaughtDateFilter = (p, caughtDateFilter, pokedexStatus) => {
 };
 
 export const getFilteredPokemon = (filterOptions, pokedexStatus) => {
-    const { searchTerm, regionFilter, triggerFilter, typeFilter, caughtFilter, canBeCaughtFilter, caughtDateFilter, exclusiveFilter } = filterOptions;
+    const { searchTerm, regionFilter, triggerFilter, typeFilter, caughtFilter, dexStatusFilter, canBeCaughtFilter, caughtDateFilter, exclusiveFilter } = filterOptions;
 
     return POKEMON.filter((p) => {
         return matchesSearchTerm(p, searchTerm, regionFilter) &&
                 matchesRegionFilter(p, regionFilter) &&
                 matchesTriggerFilter(p, triggerFilter, exclusiveFilter) &&
                 matchesTypeFilter(p, typeFilter, exclusiveFilter) &&
-                matchesCaughtStatus(p, caughtFilter, pokedexStatus) &&
+                matchesCaughtStatus(p, caughtFilter, dexStatusFilter, pokedexStatus) &&
                 matchesCanBeCaughtStatus(p, canBeCaughtFilter) &&
                 matchesCaughtDateFilter(p, caughtDateFilter, pokedexStatus);
     });

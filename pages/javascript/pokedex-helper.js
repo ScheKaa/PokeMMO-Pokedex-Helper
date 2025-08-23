@@ -27,7 +27,8 @@ const filterRegionElement = document.getElementById("filterRegion");
 const filterEncounterTriggerElement = document.getElementById("filterEncounterTrigger");
 const filterEncounterTypeElement = document.getElementById("filterEncounterType");
 const searchInputElement = document.getElementById("search");
-const filterCaughtElement = document.getElementById("filterCaught");
+const filterSpecialElement = document.getElementById("filterSpecialPokemon");
+const filterDexStatusElement = document.getElementById("filterDexStatus");
 const filterCanBeCaughtElement = document.getElementById("filterCanBeCaught");
 const filterCaughtDateElement = document.getElementById("filterCaughtDate");
 const sortCaughtDateElement = document.getElementById("sortCaughtDate");
@@ -142,7 +143,8 @@ const displayPokemon = () => {
         regionFilter: filterRegionElement.value,
         triggerFilter: filterEncounterTriggerElement.value,
         typeFilter: filterEncounterTypeElement.value,
-        caughtFilter: filterCaughtElement.value,
+        caughtFilter: filterSpecialElement.value,
+        dexStatusFilter: filterDexStatusElement.value,
         canBeCaughtFilter: filterCanBeCaughtElement.value,
         caughtDateFilter: filterCaughtDateElement.value,
         exclusiveFilter: exclusiveRarityEncounterFilteringCheckbox.checked
@@ -681,33 +683,6 @@ const populateFilters = () => {
         filterEncounterTypeElement.appendChild(option);
     });
 
-    const customRarities = ["Pheno Exclusive", "Safari Exclusive", "Time Exclusive", "Dex Required", "Legends"];
-    function getRarityColorForCaughtFilter(rarity) {
-        const triggerMap = {
-            "Pheno Exclusive": "special",
-            "Dex Required": "lure",
-            "Safari Exclusive": "very rare",
-            "Time Exclusive": "uncommon"
-        };
-        
-        const triggerType = triggerMap[rarity];
-        const LegendsHighlightColor = "#f03a16";
-        if (triggerType) {
-            const trigger = ENCOUNTER_TRIGGERS.find(t => t.name.toLowerCase() === triggerType);
-            return trigger ? trigger.color : LegendsHighlightColor;
-        }
-        return LegendsHighlightColor;
-    }
-    
-    if (filterCaughtElement.options.length <= 5) {
-        customRarities.forEach((rarity) => {
-            const option = document.createElement("option");
-            option.value = rarity;
-            option.textContent = rarity;
-            option.style.color = getRarityColorForCaughtFilter(rarity);
-            filterCaughtElement.appendChild(option);
-        });
-    }
 
     if (regionCheckboxesContainer.children.length <= 1) {
         REGIONS.forEach(region => {
@@ -930,12 +905,30 @@ const setupEventListeners = () => {
 
     const filters = [
         searchInputElement, filterRegionElement, filterEncounterTriggerElement,
-        filterEncounterTypeElement, filterCaughtElement, filterCanBeCaughtElement,
+        filterEncounterTypeElement, filterSpecialElement, filterDexStatusElement, filterCanBeCaughtElement,
         filterCaughtDateElement, sortCaughtDateElement
     ];
+    filterDexStatusElement.addEventListener('change', displayPokemon);
     filters.forEach(element => {
         const eventType = (element.id === 'search' || element.id === 'filterCaughtDate') ? 'input' : 'change';
         element.addEventListener(eventType, displayPokemon);
+    });
+
+    filterSpecialElement.addEventListener('change', () => {
+        applySelectedOptionColor(filterSpecialElement);
+        displayPokemon();
+    });
+    filterDexStatusElement.addEventListener('change', () => {
+        applySelectedOptionColor(filterDexStatusElement);
+        displayPokemon();
+    });
+    filterCanBeCaughtElement.addEventListener('change', () => {
+        applySelectedOptionColor(filterCanBeCaughtElement);
+        displayPokemon();
+    });
+    filterEncounterTriggerElement.addEventListener('change', () => {
+        applySelectedOptionColor(filterEncounterTriggerElement);
+        displayPokemon();
     });
 
     catchingMethodSwitch.addEventListener('change', () => {
@@ -1004,6 +997,16 @@ const checkIngameTimeChange = () => {
     }
     localStorage.setItem('lastKnownIngamePeriod', currentIngamePeriod);
     lastKnownIngamePeriod = currentIngamePeriod;
+};
+
+
+const applySelectedOptionColor = (selectElement) => {
+    const selectedOption = selectElement.options[selectElement.selectedIndex];
+    if (selectedOption && selectedOption.style.color) {
+        selectElement.style.color = selectedOption.style.color;
+    } else {
+        selectElement.style.color = '';
+    }
 };
 
 const updateIngameTimeDisplay = () => {
@@ -1187,7 +1190,10 @@ async function initializeApp() {
         }
 
         setupEventListeners();
-        filterCaughtElement.value = "Dex Required"; // Set "Dex Required" as default
+        applySelectedOptionColor(filterSpecialElement);
+        applySelectedOptionColor(filterDexStatusElement);
+        applySelectedOptionColor(filterCanBeCaughtElement);
+        applySelectedOptionColor(filterEncounterTriggerElement);
         await initializePokemonNotes();
         displayPokemon();
         updateIngameTimeDisplay();

@@ -249,15 +249,23 @@
           <select id="filterEncounterType">
             <option value="">All Encounter Types</option>
           </select>
-          <select id="filterCaught">
+          <select id="filterSpecialPokemon">
             <option value="">All Pokémon</option>
-            <option value="true">Caught</option>
-            <option value="false">Uncaught</option>
+            <option value="Pheno Exclusive" style="color: #FFD700;">Pheno Exclusive</option>
+            <option value="Safari Exclusive" style="color: #FF0000;">Safari Exclusive</option>
+            <option value="Time Exclusive" style="color: #9ae6b4;">Time Exclusive</option>
+            <option value="Dex Required" style="color: #00BFFF;" selected>Dex Required</option>
+            <option value="Legends" style="color: #f03a16;">Legends</option>
+          </select>
+          <select id="filterDexStatus">
+            <option value="">Pokédex Status</option>
+            <option value="true"style="color: #9ae6b4;">Caught</option>
+            <option value="false"style="color: red;">Uncaught</option>
           </select>
           <select id="filterCanBeCaught">
             <option value="">Pokémon Availability</option>
-            <option value="true">Encounterable</option>
-            <option value="false">Not Encounterable</option>
+            <option value="true" style="color: #9ae6b4;">Encounterable</option>
+            <option value="false" style="color: red;">Not Encounterable</option>
             <option value="obtainable" style="color: #9ae6b4;" selected>Obtainable Pokémon</option>
             <option value="unobtainable" style="color: red;">Unobtainable Pokémon</option>
           </select>
@@ -275,7 +283,7 @@
           <input type="text" id="search" placeholder="Search by name or ID" />
           <div class="control-group">
             <input type="checkbox" id="exclusiveRarityEncounterFiltering" checked />
-            <label for="exclusiveRarityEncounterFiltering">Exclusive Rarity/Encounter</label>
+            <label for="exclusiveRarityEncounterFiltering">Exclusive Filter</label>
           </div>
         </div>
       </header>
