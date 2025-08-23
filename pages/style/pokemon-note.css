@@ -120,6 +120,10 @@
     color: #90ee90;
 }
 
+.pokemon-note-item.evolution-note {
+    color: #ff69b4;
+}
+
 .pokemon-note {
     cursor: pointer;
     font-size: 1rem;

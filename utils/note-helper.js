@@ -2,7 +2,7 @@ import { POKEMON, EVOLUTION_TYPES } from './pokemon.js';
 import { getEvolutionLine, getEvolutionLineDetails } from './dex-helper-utils.js';
 import { isPokemonSafariExclusiveOnly} from './filter-helper.js';
 
-const generateEvolutionNotes = (pokemonId, pokedexStatus) => {
+const generateEvolutionNotes = (pokemonId, pokedexStatus, isSortLocationsView = false) => {
     const uncatchableNames = [];
     const lureOnlyNames = [];
     const safariOnlyNames = [];
@@ -88,8 +88,11 @@ const generateEvolutionNotes = (pokemonId, pokedexStatus) => {
     if (safariOnlyNames.length > 0) {
         messages.push({ text: `Info: <span class="pokemon-note-name-highlight">${safariOnlyNames.join(', ')}</span> is Safari-only.`, type: 'safari-only' });
     }
-    if (hasUnknownEvolutionType && uncaughtEvolutionCount >= 2) { // Only display if at least 2 Pokémon in the evolution line are uncaught
+    if (isSortLocationsView && hasUnknownEvolutionType && uncaughtEvolutionCount >= 2) {
         messages.push({ text: `Info: Click on <span class="pokemon-note-item safari-only">Evo</span> for evolution details`, type: 'evolution-details' });
+    }
+    if (originalPokemon && pokedexStatus[pokemonId]?.evolution_note !== null) {
+        messages.push({ text: `Info: Evolve your <span class="pokemon-note-name-highlight">${pokedexStatus[pokemonId].evolution_note}</span>.`, type: 'evolution-note' });
     }
     // console.log(`generateEvolutionNotes: Generated messages for ${originalPokemon.name}:`, messages);
     return messages;
@@ -97,10 +100,10 @@ const generateEvolutionNotes = (pokemonId, pokedexStatus) => {
 
 export const getPokemonNotes = (pokemonId, pokedexStatus) => {
     const notes = [];
-    notes.push(...generateEvolutionNotes(pokemonId, pokedexStatus));
+    notes.push(...generateEvolutionNotes(pokemonId, pokedexStatus, false)); // Pokedex view
     return notes;
 };
 
 export const getEvolutionMessages = (pokemonId, pokedexStatus) => {
-    return generateEvolutionNotes(pokemonId, pokedexStatus);
+    return generateEvolutionNotes(pokemonId, pokedexStatus, true); // Sort locations view
 };

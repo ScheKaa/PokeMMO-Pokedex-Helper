@@ -354,12 +354,12 @@ const createLocationPokemonEntry = (p, useCheapestMethod) => {
     //const evolutionLine = getEvolutionLine(p.id);
     const uncaughtEvolutionCount = getUncaughtEvolutionLineCount(p.id, pokedexStatus);
 
-    if (uncaughtEvolutionCount > 1) {
-        const evolutionLineCountElement = document.createElement('p');
-        evolutionLineCountElement.className = 'pokemon-time-exclusivity';
-        evolutionLineCountElement.textContent = `(+${uncaughtEvolutionCount} Dex)`;
-        spriteContainer.appendChild(evolutionLineCountElement);
+    const evolutionLineCountElement = document.createElement('p');
+    evolutionLineCountElement.className = 'pokemon-time-exclusivity';
+    evolutionLineCountElement.textContent = `(+${uncaughtEvolutionCount} Dex)`;
+    spriteContainer.appendChild(evolutionLineCountElement);
 
+    if (uncaughtEvolutionCount > 1) {
         const catchAllButton = document.createElement('button');
         catchAllButton.className = 'control-button catch-all-evolution-button';
         catchAllButton.textContent = 'Catch All';
@@ -415,6 +415,13 @@ const createLocationPokemonEntry = (p, useCheapestMethod) => {
         messageElement.innerHTML = msg.text;
         pokemonDetailsDiv.appendChild(messageElement);
     });
+
+    if (pokedexStatus[p.id]?.evolution_note !== null) {
+        const evolutionNoteMessage = document.createElement('p');
+        evolutionNoteMessage.className = 'uncatchable-evolution-message evolution-note-message';
+        evolutionNoteMessage.innerHTML = `Info: Evolve your <span class="pokemon-note-name-highlight">${pokedexStatus[p.id].evolution_note}</span>.`;
+        pokemonDetailsDiv.appendChild(evolutionNoteMessage);
+    }
 
     detailsAndAttributesContainer.appendChild(pokemonDetailsDiv);
 
