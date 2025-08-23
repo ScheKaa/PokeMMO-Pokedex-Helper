@@ -894,7 +894,7 @@ const setupEventListeners = () => {
 
             let message;
             if (uncaughtPokemonToNote.length > 0) {
-                message = `You're marking Pokémon <span style="color: #FFD700;">${clickedPokemon.name}</span> as caught and adding a note for uncaught Pokémon: ${pokemonNamesToNote}. Caught Pokémon will still appear in lists but won't be included in calculations. Right-click to uncatch, left-click to catch.`;
+                message = `You've caught <span style="color: #FFD700;">${clickedPokemon.name}</span> and noted uncaught: ${pokemonNamesToNote}. Noted Pokémon will still appear in lists but won't be included in calculations. Right-click to remove noted Pokémon, left-click to catch.`;
             } else {
                 message = `Mark Pokémon <span style="color: #FFD700;">${clickedPokemon.name}</span> as Caught. All other Pokémon in its evolution line are already caught.`;
             }
