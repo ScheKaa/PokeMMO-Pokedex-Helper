@@ -4,6 +4,31 @@ import { isSafariZoneLocation } from './filter-helper.js';
 import { filterLocationsByTimeAndSeason, getEvolutionLine } from './dex-helper-utils.js';
 import { isPokemonTimeExclusiveOnly } from './filter-helper.js';
 
+let cachedCatchingSpotsData = [];
+
+export const initializeCatchingSpotData = (bestCatchingSpotsContainer) => {
+    const detailsElements = Array.from(bestCatchingSpotsContainer.querySelectorAll('details'));
+    cachedCatchingSpotsData = detailsElements.map(detail => {
+        const locationHeaderElement = detail.querySelector('.location-header');
+        const fullLocationHeader = locationHeaderElement?.textContent || '';
+        const locationHeader = fullLocationHeader.split('(')[0].trim().toLowerCase();
+        const pokemonEntries = Array.from(detail.querySelectorAll('.location-pokemon-entry'));
+
+        return {
+            domElement: detail,
+            fullLocationHeader: fullLocationHeader,
+            parsedLocationHeader: locationHeader,
+            evolutionLineCount: parseInt(fullLocationHeader.match(/\((\d+) Species Lines/)?.[1] || 0),
+            catchableCount: parseInt(fullLocationHeader.match(/(\d+) Catchable Species/)?.[1] || 0),
+            totalUncaughtInEvolutionLines: parseInt(fullLocationHeader.match(/(\d+) Dex Entries/)?.[1] || 0),
+            hasTimeExclusivePokemon: locationHeaderElement?.querySelector('.summary-details-text')?.style.color === 'rgb(154, 230, 180)',
+            pokemonNames: pokemonEntries.map(entry => entry.dataset.pokemonName.toLowerCase()),
+            locationRegion: locationHeader.split(' - ')[0].trim(),
+            isSafariZone: isSafariZoneLocation(locationHeader)
+        };
+    });
+};
+
 export const hasBetterEncounterSpot = (pokemonId, currentRarity) => {
     const pokemonObj = POKEMON.find(p => p.id === pokemonId);
     if (!pokemonObj || !pokemonObj.locations) {
@@ -111,60 +136,43 @@ export const sortRelevantLocations = (relevantLocations) => {
     });
 };
 
-export const sortDisplayedCatchingSpots = (bestCatchingSpotsContainer, prioritizeTimeExclusiveChecked, sortingOption) => {
-    const detailsElements = Array.from(bestCatchingSpotsContainer.querySelectorAll('details'));
-
+export const sortDisplayedCatchingSpots = (filteredSpots, prioritizeTimeExclusiveChecked, sortingOption) => {
     // Sort the elements
-    detailsElements.sort((a, b) => {
-        const aLocationHeader = a.querySelector('.location-header');
-        const bLocationHeader = b.querySelector('.location-header');
-
-        const aEvolutionLineCount = parseInt(aLocationHeader?.textContent.match(/\((\d+) Species Lines/)?.[1] || 0);
-        const bEvolutionLineCount = parseInt(bLocationHeader?.textContent.match(/\((\d+) Species Lines/)?.[1] || 0);
-
-        const aCatchableCount = parseInt(aLocationHeader?.textContent.match(/(\d+) Catchable Species/)?.[1] || 0);
-        const bCatchableCount = parseInt(bLocationHeader?.textContent.match(/(\d+) Catchable Species/)?.[1] || 0);
-
-        const aTotalUncaughtInEvolutionLines = parseInt(aLocationHeader?.textContent.match(/(\d+) Dex Entries/)?.[1] || 0);
-        const bTotalUncaughtInEvolutionLines = parseInt(bLocationHeader?.textContent.match(/(\d+) Dex Entries/)?.[1] || 0);
-
-        const aHasTimeExclusivePokemon = aLocationHeader?.querySelector('.summary-details-text')?.style.color === 'rgb(154, 230, 180)';
-        const bHasTimeExclusivePokemon = bLocationHeader?.querySelector('.summary-details-text')?.style.color === 'rgb(154, 230, 180)';
-
+    filteredSpots.sort((a, b) => {
         if (prioritizeTimeExclusiveChecked) {
-            if (aHasTimeExclusivePokemon && !bHasTimeExclusivePokemon) {
+            if (a.hasTimeExclusivePokemon && !b.hasTimeExclusivePokemon) {
                 return -1;
             }
-            if (!aHasTimeExclusivePokemon && bHasTimeExclusivePokemon) {
+            if (!a.hasTimeExclusivePokemon && b.hasTimeExclusivePokemon) {
                 return 1;
             }
         }
 
         let primarySort = 0;
         if (sortingOption === 'evolutionLineCount') {
-            primarySort = bEvolutionLineCount - aEvolutionLineCount;
+            primarySort = b.evolutionLineCount - a.evolutionLineCount;
         } else if (sortingOption === 'catchableCount') {
-            primarySort = bCatchableCount - aCatchableCount;
+            primarySort = b.catchableCount - a.catchableCount;
         } else if (sortingOption === 'totalUncaughtInEvolutionLines') {
-            primarySort = bTotalUncaughtInEvolutionLines - aTotalUncaughtInEvolutionLines;
+            primarySort = b.totalUncaughtInEvolutionLines - a.totalUncaughtInEvolutionLines;
         }
 
         if (primarySort !== 0) {
             return primarySort;
         }
         if (!prioritizeTimeExclusiveChecked) {
-            if (aHasTimeExclusivePokemon && !bHasTimeExclusivePokemon) {
+            if (a.hasTimeExclusivePokemon && !b.hasTimeExclusivePokemon) {
                 return 1;
             }
-            if (!aHasTimeExclusivePokemon && bHasTimeExclusivePokemon) {
+            if (!a.hasTimeExclusivePokemon && b.hasTimeExclusivePokemon) {
                 return -1;
             }
         }
 
-        return bTotalUncaughtInEvolutionLines - aTotalUncaughtInEvolutionLines;
+        return b.totalUncaughtInEvolutionLines - a.totalUncaughtInEvolutionLines;
     });
 
-    detailsElements.forEach(detail => bestCatchingSpotsContainer.appendChild(detail));
+    return filteredSpots.map(spot => spot.domElement);
 };
 
 
@@ -179,40 +187,39 @@ export const filterDisplayedCatchingSpots = (config) => {
         sortingOption
     } = config;
 
-    bestCatchingSpotsContainer.querySelectorAll('details').forEach(detail => {
-        const fullLocationHeader = detail.querySelector('.location-header').textContent;
-        const locationHeader = fullLocationHeader.split('(')[0].trim().toLowerCase();
-        const pokemonEntries = detail.querySelectorAll('.location-pokemon-entry');
+    const lowerCaseLocationSearchTerm = locationSearchTerm ? locationSearchTerm.toLowerCase() : '';
+    const lowerCasePokemonSearchTerm = pokemonSearchTerm ? pokemonSearchTerm.toLowerCase() : '';
+
+    let filteredAndVisibleSpots = [];
+
+    cachedCatchingSpotsData.forEach(spot => {
         let locationMatches = true;
         let pokemonMatches = false;
 
-        const locationRegion = locationHeader.split(' - ')[0].trim();
-        const regionMatches = selectedRegions.length === 0 || selectedRegions.includes(locationRegion);
+        const regionMatches = selectedRegions.length === 0 || selectedRegions.includes(spot.locationRegion);
 
-        if (locationSearchTerm) {
-            locationMatches = locationHeader.includes(locationSearchTerm);
+        if (lowerCaseLocationSearchTerm) {
+            locationMatches = spot.parsedLocationHeader.includes(lowerCaseLocationSearchTerm);
         }
 
-        if (pokemonSearchTerm) {
-            pokemonEntries.forEach(entry => {
-                const pokemonName = entry.dataset.pokemonName.toLowerCase();
-                if (pokemonName.includes(pokemonSearchTerm)) {
-                    pokemonMatches = true;
-                }
-            });
+        if (lowerCasePokemonSearchTerm) {
+            pokemonMatches = spot.pokemonNames.some(name => name.includes(lowerCasePokemonSearchTerm));
         } else {
             pokemonMatches = true;
         }
 
         if (locationMatches && pokemonMatches && regionMatches) {
-            if (excludeSafariChecked && isSafariZoneLocation(locationHeader)) {
-                detail.style.display = 'none';
+            if (excludeSafariChecked && spot.isSafariZone) {
+                spot.domElement.style.display = 'none';
             } else {
-                detail.style.display = '';
+                spot.domElement.style.display = '';
+                filteredAndVisibleSpots.push(spot);
             }
         } else {
-            detail.style.display = 'none';
+            spot.domElement.style.display = 'none';
         }
     });
-    sortDisplayedCatchingSpots(bestCatchingSpotsContainer, prioritizeTimeExclusiveChecked, sortingOption);
+
+    const sortedElements = sortDisplayedCatchingSpots(filteredAndVisibleSpots, prioritizeTimeExclusiveChecked, sortingOption);
+    sortedElements.forEach(detail => bestCatchingSpotsContainer.appendChild(detail));
 };

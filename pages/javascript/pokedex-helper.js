@@ -13,7 +13,7 @@ import { initHamburgerMenu } from './hamburger-menu.js';
 import { getProfileData, saveProfileData, getActiveProfileName } from '../../utils/profile-manager.js';
 import { displayMessageBox, createMessageBox } from '../../utils/ui-helper.js';
 import { getFilteredPokemon, getSortedPokemon, isPokemonTimeExclusiveOnly } from '../../utils/filter-helper.js';
-import { hasBetterEncounterSpot, groupPokemonByLocation, sortLocationPokemon, sortRelevantLocations, sortDisplayedCatchingSpots, filterDisplayedCatchingSpots } from '../../utils/sorting-algorithm.js';
+import { hasBetterEncounterSpot, groupPokemonByLocation, sortLocationPokemon, sortRelevantLocations, sortDisplayedCatchingSpots, filterDisplayedCatchingSpots, initializeCatchingSpotData } from '../../utils/sorting-algorithm.js';
 
 const pokedexGrid = document.getElementById("pokedexGrid");
 const pokemonCountElement = document.getElementById("pokemonCount");
@@ -50,6 +50,16 @@ const sortCatchingSpotsDropdown = document.getElementById("sortCatchingSpotsDrop
 
 let pokedexStatus = {};
 const TextHighlightColor = '#9ae6b4';
+
+// debouncing
+const debounce = (func, delay) => {
+    let timeout;
+    return function(...args) {
+        const context = this;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(context, args), delay);
+    };
+};
 
 const loadPokemonSprite = (spriteElement, pokemon) => {
     const formatPokemonNameForSprite = (name) => {
@@ -616,6 +626,7 @@ const findBestCatchingSpots = () => {
         bestCatchingSpotsContainer.appendChild(details);
     });
 
+    initializeCatchingSpotData(bestCatchingSpotsContainer);
     bestCatchingSpotsContainer.scrollTop = savedScrollTop;
     const filterConfig = {
         bestCatchingSpotsContainer: bestCatchingSpotsContainer,
@@ -908,6 +919,10 @@ const setupEventListeners = () => {
         handleBestSpotsSpriteClick(e);
     });
 
+    const debouncedFilterDisplayedCatchingSpots = debounce((config) => {
+        filterDisplayedCatchingSpots(config);
+    }, 300); // debounce 
+
     catchingSpotSearchInput.addEventListener('input', () => {
         const filterConfig = {
             bestCatchingSpotsContainer: bestCatchingSpotsContainer,
@@ -916,9 +931,10 @@ const setupEventListeners = () => {
             selectedRegions: Array.from(regionCheckboxesContainer.querySelectorAll('input[type="checkbox"]:checked'))
                 .map(checkbox => checkbox.value.toLowerCase()),
             excludeSafariChecked: excludeSafariCheckbox.checked,
-            prioritizeTimeExclusiveChecked: prioritizeTimeExclusiveCheckbox.checked
+            prioritizeTimeExclusiveChecked: prioritizeTimeExclusiveCheckbox.checked,
+            sortingOption: sortCatchingSpotsDropdown.value
         };
-        filterDisplayedCatchingSpots(filterConfig);
+        debouncedFilterDisplayedCatchingSpots(filterConfig);
     });
     pokemonFilterInput.addEventListener('input', () => {
         const filterConfig = {
@@ -928,9 +944,10 @@ const setupEventListeners = () => {
             selectedRegions: Array.from(regionCheckboxesContainer.querySelectorAll('input[type="checkbox"]:checked'))
                 .map(checkbox => checkbox.value.toLowerCase()),
             excludeSafariChecked: excludeSafariCheckbox.checked,
-            prioritizeTimeExclusiveChecked: prioritizeTimeExclusiveCheckbox.checked
+            prioritizeTimeExclusiveChecked: prioritizeTimeExclusiveCheckbox.checked,
+            sortingOption: sortCatchingSpotsDropdown.value
         };
-        filterDisplayedCatchingSpots(filterConfig);
+        debouncedFilterDisplayedCatchingSpots(filterConfig);
     });
 
     togglePokedexBtn.addEventListener("click", () => {
@@ -1048,8 +1065,17 @@ const setupEventListeners = () => {
         filterDisplayedCatchingSpots(filterConfig);
     });
     prioritizeTimeExclusiveCheckbox.addEventListener('change', () => {
-        const selectedSortOption = sortCatchingSpotsDropdown.value;
-        sortDisplayedCatchingSpots(bestCatchingSpotsContainer, prioritizeTimeExclusiveCheckbox.checked, selectedSortOption);
+        const filterConfig = {
+            bestCatchingSpotsContainer: bestCatchingSpotsContainer,
+            locationSearchTerm: catchingSpotSearchInput.value.toLowerCase(),
+            pokemonSearchTerm: pokemonFilterInput.value.toLowerCase(),
+            selectedRegions: Array.from(regionCheckboxesContainer.querySelectorAll('input[type="checkbox"]:checked'))
+                .map(checkbox => checkbox.value.toLowerCase()),
+            excludeSafariChecked: excludeSafariCheckbox.checked,
+            prioritizeTimeExclusiveChecked: prioritizeTimeExclusiveCheckbox.checked,
+            sortingOption: sortCatchingSpotsDropdown.value
+        };
+        filterDisplayedCatchingSpots(filterConfig);
     });
     
     regionCheckboxesContainer.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
@@ -1070,7 +1096,17 @@ const setupEventListeners = () => {
     sortCatchingSpotsDropdown.addEventListener('change', () => {
         const selectedSortOption = sortCatchingSpotsDropdown.value;
         localStorage.setItem('sortCatchingSpots', selectedSortOption);
-        sortDisplayedCatchingSpots(bestCatchingSpotsContainer, prioritizeTimeExclusiveCheckbox.checked, selectedSortOption);
+        const filterConfig = {
+            bestCatchingSpotsContainer: bestCatchingSpotsContainer,
+            locationSearchTerm: catchingSpotSearchInput.value.toLowerCase(),
+            pokemonSearchTerm: pokemonFilterInput.value.toLowerCase(),
+            selectedRegions: Array.from(regionCheckboxesContainer.querySelectorAll('input[type="checkbox"]:checked'))
+                .map(checkbox => checkbox.value.toLowerCase()),
+            excludeSafariChecked: excludeSafariCheckbox.checked,
+            prioritizeTimeExclusiveChecked: prioritizeTimeExclusiveCheckbox.checked,
+            sortingOption: selectedSortOption
+        };
+        filterDisplayedCatchingSpots(filterConfig);
     });
 
     pokedexGrid.dataset.listenersInitialized = 'true';
