@@ -80,16 +80,16 @@ const generateEvolutionNotes = (pokemonId, pokedexStatus) => {
         messages.push({ text: `Consider keeping, <span class="pokemon-note-name-highlight">${uncatchableNames.join(', ')}</span> cannot be caught in the wild.`, type: 'uncatchable' });
     }
     if (lureOnlyNames.length > 0) {
-        messages.push({ text: `Note: <span class="pokemon-note-name-highlight">${lureOnlyNames.join(', ')}</span> is Lure-only. Consider keeping for evolving/breeding.`, type: 'lure-only' });
+        messages.push({ text: `Info: <span class="pokemon-note-name-highlight">${lureOnlyNames.join(', ')}</span> is Lure-only. Consider keeping for evolving/breeding.`, type: 'lure-only' });
     }
     if (specialOnlyNames.length > 0) {
-        messages.push({ text: `Note: <span class="pokemon-note-name-highlight">${specialOnlyNames.join(', ')}</span> is Special-only. Consider keeping for evolving/breeding.`, type: 'special-only' });
+        messages.push({ text: `Info: <span class="pokemon-note-name-highlight">${specialOnlyNames.join(', ')}</span> is Special-only. Consider keeping for evolving/breeding.`, type: 'special-only' });
     }
     if (safariOnlyNames.length > 0) {
-        messages.push({ text: `Note: <span class="pokemon-note-name-highlight">${safariOnlyNames.join(', ')}</span> is Safari-only.`, type: 'safari-only' });
+        messages.push({ text: `Info: <span class="pokemon-note-name-highlight">${safariOnlyNames.join(', ')}</span> is Safari-only.`, type: 'safari-only' });
     }
     if (hasUnknownEvolutionType && uncaughtEvolutionCount >= 2) { // Only display if at least 2 Pokémon in the evolution line are uncaught
-        messages.push({ text: `Note: Click on <span class="pokemon-note-item safari-only">Evo</span> for evolution details`, type: 'evolution-details' });
+        messages.push({ text: `Info: Click on <span class="pokemon-note-item safari-only">Evo</span> for evolution details`, type: 'evolution-details' });
     }
     // console.log(`generateEvolutionNotes: Generated messages for ${originalPokemon.name}:`, messages);
     return messages;

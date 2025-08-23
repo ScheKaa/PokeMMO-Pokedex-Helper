@@ -99,7 +99,7 @@ const createPokemonEntry = (p, regionFilter) => {
 
     const pokemonNote = document.createElement("button");
     pokemonNote.className = "pokemon-note control-button";
-    pokemonNote.textContent = "NOTE";
+    pokemonNote.textContent = "Info";
     pokemonNote.dataset.pokemonId = p.id;
 
     if (!pokemonNotesCache[p.id] || pokemonNotesCache[p.id].length === 0) {

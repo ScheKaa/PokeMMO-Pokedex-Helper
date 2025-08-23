@@ -10,11 +10,12 @@ This project is a Pokedex Helper designed for PokeMMO, providing tools and utili
 - **Browser Stored:** Progress is browser stored, you can export/import your progress in case you need to switch your browser, or edit the `.json` file manually.
 - **Best Catching Spot Recommendations:** Identify optimal location for catching Pokemon, including current season and daytime.
 - **Catch Rate Calculator:** Calculate the probability of catching a Pokemon based on various factors.
+- **Pokemon Notes:** Mark Pokémon in an evolution line as 'noted' to exclude them from 'Best Catching Spots' calculations. Noted Pokémon have an orange border. Right-click a Pokémon in the 'Sort Locations' list and select 'Note' to apply.
 
 ## Usage
 
 - **Basics:**
-  Clicking on a Picture in Pokedex view or 'Best Catching Spots' marks a Pokemon as caught. By clicking on a caught Pokemon again, it gets 'released'.
+  Clicking on a Picture in Pokedex view or 'Sort Locations' marks a Pokemon as caught. By clicking on a caught Pokemon again, it gets 'released'.
 
 - **Options:**
 
