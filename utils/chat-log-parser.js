@@ -1,6 +1,6 @@
 import { getActiveProfileName } from './profile-manager.js';
 import { POKEMON } from './pokemon.js';
-import { displayMessageBox } from './ui-helper.js';
+import { displayMessageBox, createCheckboxMessageBox } from './ui-helper.js';
 import { getEvolutionLine } from './dex-helper-utils.js';
 
 function formatLogTimestamp(timestampStr) {
@@ -119,61 +119,68 @@ export async function confirmAndAddCaughtPokemon(newCaughtPokemon, pokedexStatus
         return;
     }
 
-    let updatedCount = 0;
-    uniqueNewCaughtPokemon.forEach(entry => {
-        const pokemonId = entry.id;
-        const pokemon = POKEMON.find(p => p.id === pokemonId);
+    const pokemonListForMessageBox = Array.from(uniqueNewCaughtPokemon.values()).map(entry => ({
+        id: entry.id,
+        name: entry.name
+    }));
 
-        if (!pokemon) {
-            console.warn(`Pokémon with ID ${pokemonId} not found in POKEMON data.`);
-            return;
+    createCheckboxMessageBox(
+        "info",
+        "Confirm Pokémon Addition",
+        "The following Pokémon were detected in your chat log. Please confirm which ones you want to add to your Pokédex:",
+        pokemonListForMessageBox,
+        (selectedPokemonIds) => {
+            let updatedCount = 0;
+            selectedPokemonIds.forEach(pokemonId => {
+                const entry = uniqueNewCaughtPokemon.get(pokemonId);
+                if (!entry) {
+                    console.warn(`Selected Pokémon with ID ${pokemonId} not found in uniqueNewCaughtPokemon.`);
+                    return;
+                }
+
+                const pokemon = POKEMON.find(p => p.id === pokemonId);
+                if (!pokemon) {
+                    console.warn(`Pokémon with ID ${pokemonId} not found in POKEMON data.`);
+                    return;
+                }
+
+                const evolutionLineNames = getEvolutionLine(pokemonId);
+                const preEvolutionNames = Array.from(evolutionLineNames).filter(name => name.toLowerCase() !== pokemon.name.toLowerCase());
+
+                const hasPreEvolutionCaught = preEvolutionNames.some(evoName => {
+                    const evoPokemon = POKEMON.find(p => p.name.toLowerCase() === evoName.toLowerCase());
+                    return evoPokemon && pokedexStatus[evoPokemon.id] && pokedexStatus[evoPokemon.id].caught;
+                });
+
+                const hasPreEvolutionInNewCaught = preEvolutionNames.some(evoName => {
+                    return newCaughtPokemon.some(newEntry => newEntry.name.toLowerCase() === evoName.toLowerCase());
+                });
+
+                let shouldAddPokemon = false;
+                if (entry.type === 'evolution') {
+                    shouldAddPokemon = (!pokedexStatus[pokemonId] || !pokedexStatus[pokemonId].caught || (pokedexStatus[pokemonId].timestamp && new Date(entry.timestamp) > new Date(pokedexStatus[pokemonId].timestamp))) && (hasPreEvolutionCaught || hasPreEvolutionInNewCaught);
+                } else { // type === 'dex'
+                    shouldAddPokemon = (!pokedexStatus[pokemonId] || !pokedexStatus[pokemonId].caught || (pokedexStatus[pokemonId].timestamp && new Date(entry.timestamp) > new Date(pokedexStatus[pokemonId].timestamp)));
+                }
+
+                if (shouldAddPokemon) {
+                    pokedexStatus[pokemonId] = {
+                        id: entry.id,
+                        name: entry.name,
+                        caught: true,
+                        timestamp: entry.timestamp,
+                        evolution_note: null
+                    };
+                    updatedCount++;
+                    console.log(`Pokemon ${entry.name} added.`);
+                } else {
+                    console.log(`Pokemon ${entry.name} not added conditions not met for type '${entry.type}'.`);
+                }
+            });
+            savePokedexStatus('pokedexStatus', pokedexStatus);
+            displayPokemon();
+            displayMessageBox(`${updatedCount} Pokémon added/updated in your Pokédex!`, "success");
+            console.log("Pokédex update completed. Updated count:", updatedCount);
         }
-
-        const evolutionLineNames = getEvolutionLine(pokemonId);
-        const preEvolutionNames = Array.from(evolutionLineNames).filter(name => name.toLowerCase() !== pokemon.name.toLowerCase());
-
-        const hasPreEvolutionCaught = preEvolutionNames.some(evoName => {
-            const evoPokemon = POKEMON.find(p => p.name.toLowerCase() === evoName.toLowerCase());
-            return evoPokemon && pokedexStatus[evoPokemon.id] && pokedexStatus[evoPokemon.id].caught;
-        });
-
-        const hasPreEvolutionInNewCaught = preEvolutionNames.some(evoName => {
-            const foundInNewCaught = newCaughtPokemon.some(newEntry => newEntry.name.toLowerCase() === evoName.toLowerCase());
-            if (foundInNewCaught) {
-                // console.log(`  Pre-evolution '${evoName}' found in newCaughtPokemon for ${pokemon.name}.`);
-            }
-            return foundInNewCaught;
-        });
-
-        /*console.log(`  Checking ${pokemon.name}:`);
-        console.log(`    Current status in pokedexStatus: ${pokedexStatus[pokemonId] ? JSON.stringify(pokedexStatus[pokemonId]) : 'Not found'}`);
-        console.log(`    Is new entry newer? ${pokedexStatus[pokemonId] && pokedexStatus[pokemonId].timestamp ? new Date(entry.timestamp) > new Date(pokedexStatus[pokemonId].timestamp) : 'N/A'}`);
-        console.log(`    Has pre-evolution caught: ${hasPreEvolutionCaught}`);
-        console.log(`    Has pre-evolution in newCaughtPokemon: ${hasPreEvolutionInNewCaught}`);
-        console.log(`    Entry Type: ${entry.type}`);*/
-        let shouldAddPokemon = false;
-        if (entry.type === 'evolution') {
-            shouldAddPokemon = (!pokedexStatus[pokemonId] || !pokedexStatus[pokemonId].caught || (pokedexStatus[pokemonId].timestamp && new Date(entry.timestamp) > new Date(pokedexStatus[pokemonId].timestamp))) && (hasPreEvolutionCaught || hasPreEvolutionInNewCaught);
-        } else { // type === 'dex'
-            shouldAddPokemon = (!pokedexStatus[pokemonId] || !pokedexStatus[pokemonId].caught || (pokedexStatus[pokemonId].timestamp && new Date(entry.timestamp) > new Date(pokedexStatus[pokemonId].timestamp)));
-        }
-
-        if (shouldAddPokemon) {
-            pokedexStatus[pokemonId] = {
-                id: entry.id,
-                name: entry.name,
-                caught: true,
-                timestamp: entry.timestamp,
-                evolution_note: null // Ensure it's not noted if caught
-            };
-            updatedCount++;
-            console.log(`Pokemon ${entry.name} added.`);
-        } else {
-            console.log(`Pokemon ${entry.name} not added conditions not met for type '${entry.type}'.`);
-        }
-    });
-    savePokedexStatus('pokedexStatus', pokedexStatus);
-    displayPokemon();
-    displayMessageBox(`${updatedCount} Pokémon added/updated in your Pokédex!`, "success");
-    console.log("Pokédex update completed. Updated count:", updatedCount);
+    );
 }
