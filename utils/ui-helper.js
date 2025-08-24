@@ -111,6 +111,98 @@ export function createMessageBox(type, title, message, isConfirmation = false, o
     }
 }
 
+export function createCheckboxMessageBox(type, title, message, pokemonList, onConfirm) {
+    const messageBox = document.createElement('div');
+    let messageBoxClasses = 'message-box ';
+
+    if (type === 'success') {
+        messageBoxClasses += 'success';
+    } else if (type === 'error') {
+        messageBoxClasses += 'error';
+    } else {
+        messageBoxClasses += 'info';
+    }
+    messageBox.className = messageBoxClasses;
+
+    const contentWrapper = document.createElement('div');
+    contentWrapper.className = 'message-box-content';
+
+    if (title) {
+        const headerDiv = document.createElement('div');
+        headerDiv.className = 'message-box-header';
+        headerDiv.innerHTML = `<h3 class="text-lg font-bold mb-2">${title}</h3>`;
+        messageBox.appendChild(headerDiv);
+    }
+
+    const messageSpan = document.createElement('span');
+    messageSpan.innerHTML = message;
+    contentWrapper.appendChild(messageSpan);
+
+    const checkboxContainer = document.createElement('div');
+    checkboxContainer.className = 'message-box-checkbox-container';
+
+    pokemonList.forEach(pokemon => {
+        const checkboxDiv = document.createElement('div');
+        checkboxDiv.className = 'message-box-checkbox-item';
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.id = `pokemon-checkbox-${pokemon.id}`;
+        checkbox.value = pokemon.id;
+        checkbox.checked = true;
+        checkbox.className = 'mr-2';
+
+        const label = document.createElement('label');
+        label.htmlFor = `pokemon-checkbox-${pokemon.id}`;
+        label.textContent = pokemon.name;
+        label.className = 'text-white';
+
+        checkboxDiv.appendChild(checkbox);
+        checkboxDiv.appendChild(label);
+        checkboxContainer.appendChild(checkboxDiv);
+    });
+    contentWrapper.appendChild(checkboxContainer);
+    messageBox.appendChild(contentWrapper);
+
+    const buttonContainer = document.createElement('div');
+    buttonContainer.className = 'mt-3 flex justify-center space-x-2 w-full';
+
+    const confirmButton = document.createElement('button');
+    confirmButton.textContent = 'Confirm';
+    confirmButton.className = 'px-4 py-2 bg-white text-blue-700 rounded-md hover:bg-gray-100 mr-2 button-style-match';
+    confirmButton.onclick = () => {
+        const selectedPokemonIds = Array.from(checkboxContainer.querySelectorAll('input[type="checkbox"]:checked'))
+            .map(checkbox => parseInt(checkbox.value, 10));
+        if (onConfirm) onConfirm(selectedPokemonIds);
+        messageBox.remove();
+    };
+
+    const cancelButton = document.createElement('button');
+    cancelButton.textContent = 'Cancel';
+    cancelButton.className = 'px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 button-style-match';
+    cancelButton.onclick = () => messageBox.remove();
+
+    buttonContainer.appendChild(confirmButton);
+    buttonContainer.appendChild(cancelButton);
+    contentWrapper.appendChild(buttonContainer);
+
+    const closeButton = document.createElement('button');
+    closeButton.className = 'close-message-box';
+    closeButton.innerHTML = '<i class="fas fa-times"></i>';
+    closeButton.onclick = () => messageBox.remove();
+    if (title) {
+        messageBox.querySelector('.message-box-header').appendChild(closeButton);
+    } else {
+        messageBox.appendChild(closeButton);
+    }
+
+    document.body.appendChild(messageBox);
+
+    setTimeout(() => {
+        messageBox.style.opacity = '1';
+    }, 10);
+}
+
 export function showModal(modalElement) {
     modalElement.classList.add('visible');
 }

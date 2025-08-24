@@ -795,3 +795,37 @@ input:checked + .slider:before {
 .sort-dropdown-container {
   margin-bottom: 15px;
 }
+
+/* Styling for the Checkbox Message Box */
+.message-box-checkbox-container {
+  margin-top: 15px;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  background-color: var(--primary-bg);
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.message-box-checkbox-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.message-box-checkbox-item:last-child {
+  margin-bottom: 0;
+}
+
+.message-box-checkbox-item input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--button-bg);
+  margin-right: 8px;
+}
+
+.message-box-checkbox-item label {
+  color: var(--text-color);
+  font-size: 1rem;
+  cursor: pointer;
+}

@@ -11,7 +11,7 @@ import { getEvolutionMessages, getPokemonNotes } from '../../utils/note-helper.j
 import { processChatLog, confirmAndAddCaughtPokemon } from '../../utils/chat-log-parser.js';
 import { initHamburgerMenu } from './hamburger-menu.js';
 import { getProfileData, saveProfileData, getActiveProfileName } from '../../utils/profile-manager.js';
-import { displayMessageBox, createMessageBox } from '../../utils/ui-helper.js';
+import { displayMessageBox, createMessageBox, createCheckboxMessageBox } from '../../utils/ui-helper.js';
 import { getFilteredPokemon, getSortedPokemon, isPokemonTimeExclusiveOnly } from '../../utils/filter-helper.js';
 import { hasBetterEncounterSpot, groupPokemonByLocation, sortLocationPokemon, sortRelevantLocations, sortDisplayedCatchingSpots, filterDisplayedCatchingSpots, initializeCatchingSpotData } from '../../utils/sorting-algorithm.js';
 
@@ -679,12 +679,17 @@ const handleBestSpotsSpriteClick = (e) => {
     const parentDetails = clickedSprite.closest('details');
     const locationKey = parentDetails?.querySelector('.location-header')?.dataset.locationName;
 
+    // move after reloading and focus location-search-input for typing
     setTimeout(() => {
         findBestCatchingSpots();
         if (locationKey) {
             const newDetails = bestCatchingSpotsContainer.querySelector(`details .location-header[data-location-name="${locationKey}"]`)?.closest('details');
             if (newDetails) {
                 newDetails.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                const locationSearchInput = newDetails.querySelector('.location-search-input');
+                if (locationSearchInput) {
+                    locationSearchInput.focus();
+                }
             }
         }
     }, 300);
@@ -809,12 +814,14 @@ const setupEventListeners = () => {
             const uncaughtEvolutionPokemon = evolutionLineNames.map(name => POKEMON.find(p => p.name === name)).filter(p => p && !pokedexStatus[p.id]?.caught);
 
             if (uncaughtEvolutionPokemon.length > 0) {
-                const pokemonNamesToCatch = uncaughtEvolutionPokemon.map(p => `<span style="color: #FFD700;">${p.name}</span>`).join(', ');
-                const message = `The Pokémon; ${pokemonNamesToCatch}, will be marked as caught!`;
-                createMessageBox("info", "WARNING", `${message}`, true, async () => {
+                const message = `Select which Pokémon from this evolution line you want to catch.`;
+                createCheckboxMessageBox("info", "Catch All Evolution Line", message, uncaughtEvolutionPokemon, async (selectedPokemonIds) => {
                     const now = new Date().toISOString();
-                    uncaughtEvolutionPokemon.forEach(p => {
-                        pokedexStatus[p.id] = { id: p.id, name: p.name, caught: true, timestamp: now };
+                    selectedPokemonIds.forEach(id => {
+                        const p = POKEMON.find(pk => pk.id === id);
+                        if (p) {
+                            pokedexStatus[p.id] = { id: p.id, name: p.name, caught: true, timestamp: now, evolution_note: null };
+                        }
                     });
                     saveProfileData('pokedexStatus', pokedexStatus);
                     await updateEvolutionNotesInCache(pokemonId);
@@ -890,28 +897,46 @@ const setupEventListeners = () => {
 
             // Filter to only include uncaught Pokémon for noting
             const uncaughtPokemonToNote = evolutionLinePokemon.filter(p => p.id !== pokemonId && !pokedexStatus[p.id]?.caught);
-            const pokemonNamesToNote = uncaughtPokemonToNote.map(p => `<span style="color: #FFD700;">${p.name}</span>`).join(', ');
+            const pokemonNamesToNote = uncaughtPokemonToNote.map(p => p.name);
 
-            let message;
-            if (uncaughtPokemonToNote.length > 0) {
-                message = `You've caught <span style="color: #FFD700;">${clickedPokemon.name}</span> and noted uncaught: ${pokemonNamesToNote}. Noted Pokémon will still appear in lists but won't be included in calculations. Right-click to remove noted Pokémon, left-click to catch.`;
-            } else {
-                message = `Mark Pokémon <span style="color: #FFD700;">${clickedPokemon.name}</span> as Caught. All other Pokémon in its evolution line are already caught.`;
-            }
+            let message = `You're about to catch <span style="color: #FFD700;">${clickedPokemon.name}</span>. Select which uncaught Pokémon from its evolution line you want to mark as noted. Noted Pokémon will still appear in lists but won't be included in calculations. Right-click to remove noted Pokémon, left-click to catch.`;
             
-            createMessageBox("info", "WARNING", message, true, async () => {
+            createCheckboxMessageBox("info", "Note Evolution Line", message, uncaughtPokemonToNote, async (selectedPokemonIds) => {
                 const now = new Date().toISOString();
 
                 // Mark the clicked Pokémon as caught and clear its evolution_note
                 pokedexStatus[pokemonId] = { ...pokedexStatus[pokemonId], caught: true, timestamp: now, evolution_note: null };
+                
+                // Mark selected Pokémon as noted
                 uncaughtPokemonToNote.forEach(p => {
-                    pokedexStatus[p.id] = { ...pokedexStatus[p.id], evolution_note: clickedPokemon.name };
+                    if (selectedPokemonIds.includes(p.id)) {
+                        pokedexStatus[p.id] = { ...pokedexStatus[p.id], evolution_note: clickedPokemon.name };
+                    } else {
+                        // If deselected, ensure it's not noted
+                        pokedexStatus[p.id] = { ...pokedexStatus[p.id], evolution_note: null };
+                    }
                 });
 
                 saveProfileData('pokedexStatus', pokedexStatus);
                 await updateEvolutionNotesInCache(pokemonId);
                 displayPokemon();
-                findBestCatchingSpots();
+                
+                const parentDetails = noteLineButton.closest('details');
+                const locationKey = parentDetails?.querySelector('.location-header')?.dataset.locationName;
+
+                setTimeout(() => {
+                    findBestCatchingSpots();
+                    if (locationKey) {
+                        const newDetails = bestCatchingSpotsContainer.querySelector(`details .location-header[data-location-name="${locationKey}"]`)?.closest('details');
+                        if (newDetails) {
+                            newDetails.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            const locationSearchInput = newDetails.querySelector('.location-search-input');
+                            if (locationSearchInput) {
+                                locationSearchInput.focus();
+                            }
+                        }
+                    }
+                }, 300);
             });
             return;
         }
