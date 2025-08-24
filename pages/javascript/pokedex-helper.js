@@ -944,6 +944,24 @@ const setupEventListeners = () => {
         handleBestSpotsSpriteClick(e);
     });
 
+    bestCatchingSpotsContainer.addEventListener('contextmenu', async (e) => {
+        const entry = e.target.closest('.location-pokemon-entry');
+        if (!entry) return;
+
+        const pokemonId = entry.dataset.id;
+        if (!pokemonId) return;
+
+        e.preventDefault();
+
+        // Right-click: remove evolution_note
+        if (pokedexStatus[pokemonId]?.evolution_note !== null) {
+            pokedexStatus[pokemonId].evolution_note = null;
+            saveProfileData('pokedexStatus', pokedexStatus);
+            await updateEvolutionNotesInCache(pokemonId);
+            findBestCatchingSpots();
+        }
+    });
+
     const debouncedFilterDisplayedCatchingSpots = debounce((config) => {
         filterDisplayedCatchingSpots(config);
     }, 300); // debounce 
