@@ -910,7 +910,7 @@ const setupEventListeners = () => {
                 // Mark selected Pokémon as noted
                 uncaughtPokemonToNote.forEach(p => {
                     if (selectedPokemonIds.includes(p.id)) {
-                        pokedexStatus[p.id] = { ...pokedexStatus[p.id], evolution_note: clickedPokemon.name };
+                        pokedexStatus[p.id] = { ...pokedexStatus[p.id], evolution_note: clickedPokemon.name, caught: false, timestamp: null }; // Ensure it's not caught if noted
                     } else {
                         // If deselected, ensure it's not noted
                         pokedexStatus[p.id] = { ...pokedexStatus[p.id], evolution_note: null };

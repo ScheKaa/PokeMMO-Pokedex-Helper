@@ -163,7 +163,8 @@ export async function confirmAndAddCaughtPokemon(newCaughtPokemon, pokedexStatus
                 id: entry.id,
                 name: entry.name,
                 caught: true,
-                timestamp: entry.timestamp
+                timestamp: entry.timestamp,
+                evolution_note: null // Ensure it's not noted if caught
             };
             updatedCount++;
             console.log(`Pokemon ${entry.name} added.`);
